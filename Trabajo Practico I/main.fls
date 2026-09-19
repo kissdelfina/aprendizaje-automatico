@@ -1,0 +1,98 @@
+PWD /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I
+INPUT /usr/local/texlive/2026/texmf.cnf
+INPUT /usr/local/texlive/2026/texmf-dist/web2c/texmf.cnf
+INPUT /usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.tex
+OUTPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.log
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/inputenc.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/inputenc.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/babel.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/babel.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/txtbabel.def
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/locale/es/babel-spanish.tex
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/locale/es/babel-spanish.tex
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/locale/es/babel-spanish.tex
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel/locale/es/babel-es.ini
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel-spanish/spanish.ldf
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel-spanish/spanish.ldf
+INPUT /usr/local/texlive/2026/texmf-dist/tex/generic/babel-spanish/spanish.ldf
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/a4wide/a4wide.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/a4wide/a4wide.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/ntgclass/a4.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/ntgclass/a4.sty
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/caratula.sty
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/caratula.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/float/float.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/float/float.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.aux
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.aux
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.aux
+OUTPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.aux
+INPUT /usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+INPUT /usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+INPUT /usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_dc.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_dc.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_dc.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_dc.jpg
+OUTPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.pdf
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_dc.jpg
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_uba.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_uba.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_uba.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_uba.jpg
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/logo_uba.jpg
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmssbx10.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmss10.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm
+INPUT /usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
+INPUT /Users/delfinakiss/Documents/UBA/Aprendizaje Automático/Trabajo Practico/aprendizaje-automatico/Trabajo Practico I/main.aux
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb

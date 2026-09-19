@@ -1,0 +1,188 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc} % para poder usar tildes en archivos UTF-8
+\usepackage[spanish]{babel} % para que comandos como \today den el resultado en castellano
+\usepackage{a4wide} % márgenes un poco más anchos que lo usual
+\usepackage[sinEntregas]{caratula}
+\usepackage{booktabs}
+\usepackage{float}
+
+\begin{document}
+
+\titulo{Trabajo Práctico}
+
+\fecha{\today}
+
+\materia{Aprendizaje Automático I}
+\grupo{Grupo 11}
+
+\integrante{Bravo, Iván Agustín}{001/01}{email1@dominio.com}
+\integrante{Kiss, María Delfina}{72/23}{kissdelfina@gmail.com}
+\integrante{Lützow Holm, Eric}{003/01}{email3@dominio.com}
+\integrante{Mendoza, Juan Cruz}{004/01}{email4@dominio.com}
+\integrante{Rostan, Marcos Andrés}{005/01}{email5@dominio.com}
+% Pongan cuantos integrantes quieran
+
+\maketitle
+
+\section{Separación de datos}
+Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) para evaluar nuestra configuración. Para eso, podemos tomar el estándar de usar el 15\% del total. Luego, es muy importante que esa partición sea representativa del dataset: que la proporción de etiquetas sea aleatoria y balanceada. Es decir, que la proporción de True y False sea la misma que en el resto del dataset. Además, ese 15\% no debe tener una propiedad que el resto del dataset no tenga y viceversa. Por ejemplo, que los valores de ciertos atributos sean muy diferentes al del resto.
+
+Sabemos que del total, el 72\% de las instancias corresponden a 0 (False) y 28\% a 1 (True). La propuesta final entonces es mezclar primero las instancias y luego tomar esas proporciones para particionar el held-out. Una forma de hacer eso es utilizar los métodos \texttt{group\_by} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de dataframe de Pandas. Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente.
+
+\section{Construcción de modelos}
+Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. Separamos el desarrollo nuevamente de manera proporcional a sus etiquetas. Para eso, usamos \texttt{train\_test\_split} de \texttt{sklearn} estratificado. Nos quedamos con un 0,8 de entrenamiento y 0,2 de validación. Obtuvimos un accuracy sobre el subconjunto de validación de 0.6471.
+
+Utilizamos \texttt{X\_dev} e \texttt{y\_dev} con un K-Fold estratificado, de manera que conserve la proporción de etiquetas.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|cc|cc|cc}
+\toprule
+\textbf{Permutación} & \textbf{Acc (train)} & \textbf{Acc (val)} & 
+\textbf{AUPRC (train)} & \textbf{AUPRC (val)} & 
+\textbf{AUCROC (train)} & \textbf{AUCROC (val)} \\
+\midrule
+1 & 0.8265 & 0.6000 & 0.7153 & 0.3265 & 0.8626 & 0.5697 \\
+2 & 0.8265 & 0.7412 & 0.6862 & 0.4213 & 0.8037 & 0.6411 \\
+3 & 0.8353 & 0.6235 & 0.6981 & 0.2895 & 0.8506 & 0.4754 \\
+4 & 0.8265 & 0.6471 & 0.6900 & 0.3594 & 0.8429 & 0.6117 \\
+5 & 0.7971 & 0.6824 & 0.6491 & 0.3574 & 0.8538 & 0.5683 \\
+\midrule
+\textbf{Promedios} & \textbf{0.8224} & \textbf{0.6588} & 
+\textbf{0.6878} & \textbf{0.3508} & 
+\textbf{0.8427} & \textbf{0.5732} \\
+\midrule
+\textbf{Global} & \textbf{(NO)} & 0.6588 & 
+\textbf{(NO)} & 0.3404 & 
+\textbf{(NO)} & 0.5610 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Resultados obtenidos para las cinco permutaciones y sus promedios.}
+\label{tab:resultados_permutaciones}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{llcc}
+\toprule
+\textbf{Altura máxima} & \textbf{Criterio de corte} & \textbf{Accuracy (training)} & \textbf{Accuracy (validación)} \\
+\midrule
+3        & Gini     & 0.8224 & 0.6588 \\
+5        & Gini     & 0.9482 & 0.6447 \\
+Infinito & Gini     & 1.0000 & 0.6400 \\
+3        & Entropía & 0.8029 & 0.6541 \\
+5        & Entropía & 0.9253 & 0.6612 \\
+Infinito & Entropía & 1.0000 & 0.5953 \\
+\bottomrule
+\end{tabular}
+\caption{Resultados de Accuracy en entrenamiento y validación según hiperparámetros del árbol de decisión.}
+\label{tab:accuracy_arboles}
+\end{table}
+
+Del Cuadro \ref{tab:resultados_permutaciones}, podemos ver que el modelo base (con altura máxima 3 y criterio Gini) logró un accuracy promedio de 0.8224 en entrenamiento y 0.6588 en validación. Ademas, al medir las predicciones globales sobre todo ese conjunto de validación, conseguimos un AUCROC de 0.5610 y un AUPRC de 0.3404.
+
+En el Cuadro \ref{tab:accuracy_arboles}, podemos notar cómo a medida que aumentamos la altura máxima del arbol, mejor es la accuracy en los datos de entrenamiento de manera notoria, pero disminuye el accuracy en los datos de validacion. Esto es lo que conocemos como overfitting: el modelo aprende muy bien los datos que tiene de entrenamiento, pero después no es bueno para generalizar. Podemos ver que cuando el arbol no tiene restricción de altura no tiene errores en el conjunto de entrenamiento, pero después tiene una mala performance sobre los datos de validación.
+
+De entre todas las opciones exploradas vemos que la que mayor accuracy de validación tiene es la de altura máxima 3 y criterio de corte Gini. Si bien los criterios de corte Gini y Entropía experimentan ambos overfitting al crecer la altura máxima, Gini tiene una ventaja en performance en los datos de validación por sobre Entropía.
+
+\section{Comparación de algoritmos}
+\subsection{Árboles de decisión}
+Como hiperparámetros tuvimos en cuenta la profundidad máxima, la mínima cantidad de instancias que necesita un nodo para dividirse, la mínima cantidad de instancias de cada hoja, el criterio (Gini o Entropía) y la máxima cantidad de atributos, probando la raíz cuadrada y el logaritmo de la cantidad total.
+
+Los mejores hiperparámetros encontrados fueron: 
+\texttt{'min\_samples\_split': 10, 
+'min\_samples\_leaf': 15, 
+'max\_features': 'log2', 
+'max\_depth': 5, 
+'criterion': 'gini'}
+Con un AUCROC score de 0.6740
+
+\subsection{KNN}
+Para KNN, primero hay que tener en cuenta que suele ser mejor escalar las features. Como pueden tener escalas muy distintas, las features de mayor rango pueden llegar a dominar la distancia. Hiperparámetros:
+\begin{itemize}
+    \item \texttt{n\_neighbours}: mientras un k chico se puede llegar a ajustar al ruido local de cada datapoint, un k grande simplemente se aproxima a predecir la clase mayoritaria.
+
+    \item \texttt{weights}: permite que los puntos más cercanos pesen más.
+
+    \item \texttt{metric}: que es la distancia que usamos para medir cercanía.
+\end{itemize}
+
+Mejores hiperparámetros encontrados para KNN: texttt{'scaler': None, 'knn\_weights': 'distance', 'knn\_n\_neighbors': 21, 'knn\_metric': 'manhattan'}
+Mejor score AUCROC: 0.8474
+
+\subsection{SVM}
+Para SVM, también necesitamos escalar los features. Hiperparámetros:
+
+\begin{itemize}
+    \item \texttt{C}: controla la regularización del SVM. Cuanto mayor es, obliga a SVM a tener un margen estricto, lo que puede llevar a overfitting, mientras que cuanto más chico es, tolera más puntos mal clasificados.
+    \item \texttt{kernel}: nos dice si la frontera es lineal en el espacio de features, o se hace un mapping mediante el kernel trick para hacer un hiperplano en otro espacio.
+    \item \texttt{degree}: para kernels polinómicos solamente debemos decidir hasta qué grado puede ser el polinomio.
+    \item \texttt{gamma}: para el kernel RBF y poly, gamma define el radio de influencia de cada support vector.
+\end{itemize}
+
+Para \texttt{Gamma} y \texttt{C}, se suelen probar diferentes órdenes de magnitud. Para \texttt{degree}, grados mayores a 3 puede generar un espacio de features enorme y sobreajustar con pocas instancias.
+
+Mejores hiperparámetros encontrados para SVM: texttt{'svm\_kernel': 'poly', 'svm\_gamma': 1, 'svm\_degree': 2, 'svm\_C': 1000, 'scaler': None}
+Mejor score AUCROC: 0.8587
+
+Vemos que las top 5 mejores configuraciones tienen la misma AUCROC y sólo cambian el C y Gamma, indicando que sin escalar los mismos no tienen relevancia.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|c|c|c}
+\toprule
+\textbf{Índice} & \textbf{Params} & \textbf{Mean Test Score} & \textbf{Std Test Score} \\
+\midrule
+2  & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 1, ...\}} 
+   & 0.858743 & 0.055193 \\
+9  & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.0001, ...\}} 
+   & 0.858743 & 0.055193 \\
+23 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 1, ...\}} 
+   & 0.858743 & 0.055193 \\
+29 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.01, ...\}} 
+   & 0.858743 & 0.055193 \\
+25 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.01, ...\}} 
+   & 0.858743 & 0.055193 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Mejores configuraciones obtenidas mediante búsqueda de hiperparámetros.}
+\label{tab:svm_gridsearch}
+\end{table}
+
+Resulta muy llamativo ver que tanto para SVM y KNN, las mejores configuraciones de hiperparámetros según AUCROC fueron aquellas que no utilizaron el Scaler. Esto indica que las features con un rango más grande terminaron siendo aquellas que también tenían mayor poder predictivo.
+
+\subsection{LDA y Naive Bayes}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|cc}
+\toprule
+\textbf{Fold} & \textbf{LDA} & \textbf{Naive Bayes} \\
+\midrule
+1 & 0.7131 & 0.7425 \\
+2 & 0.6919 & 0.7582 \\
+3 & 0.6291 & 0.7589 \\
+4 & 0.6086 & 0.6926 \\
+5 & 0.5608 & 0.7357 \\
+\midrule
+\textbf{Promedio} & \textbf{0.6407} & \textbf{0.7376} \\
+\bottomrule
+\end{tabular}
+\caption{AUCROC por fold y promedio para LDA y Naive Bayes.}
+\label{tab:aucroc_lda_nb}
+\end{table}
+
+Vemos que el AUCROC de LDA es el peor con AUC = 0.6407. Esto puede deberse a que se está estimando una matriz de covarianza de 200x200 (por las 200 features con que se entrenan) con pocas instancias de train por fold, lo que resulta en una estimación ruidosa y casi singular. En este caso, podríamos utilizar el hiperparámetro de \texttt{shrinkage} que regulariza la matriz de covarianza.
+
+Por otro lado, Naive Bayes, incluso sin haber hecho una búsqueda de hiperparámetros, tuvo un AUC = 0.7376, similar a la performance de SVM y KNN. Este modelo, al asumir independencia entre los features, sólo estima la media y varianza por cada gen, por lo que cada una de las estimaciones puede ser buena incluso con pocos datos. Uno de los hiperparámetros que podríamos modificar es \texttt{var\_smoothing}, el cual añade una fracción de la varianza más grande de las features a cada una de las estimaciones de varianza. Esto funciona como una regularización de la varianza, y también ayuda a que si hay una feature con varianza casi cero, un valor distinto en test no reciba probabilidad casi cero, dominando el producto.
+
+\section{Evaluación de performance}
+
+
+\section{Conclusiones}
+
+\end{document}
