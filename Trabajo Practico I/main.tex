@@ -10,8 +10,8 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage[scaled=0.75]{roboto-mono}
-\usepackage{hyperref} % Siempre preferentemente al final de los paquetes
-
+\usepackage[pdfview=Fit]{hyperref} % Siempre preferentemente al final de los paquetes
+\usepackage[all]{hypcap}
 % Definición del fondo gris claro
 \definecolor{codegray}{rgb}{0.96,0.96,0.96}
 
@@ -52,7 +52,7 @@
 \integrante{Kiss, María Delfina}{72/23}{kissdelfina@gmail.com}
 \integrante{Lützow Holm, Eric}{323/12}{elholm90@gmail.com}
 \integrante{Mendoza, Juan Cruz}{004/01}{email4@dominio.com}
-\integrante{Rostan, Marcos Andrés}{005/01}{email5@dominio.com}
+\integrante{Rostan, Marcos Andrés}{589/23}{rostanmarcos@gmail.com}
 % Pongan cuantos integrantes quieran
 
 \maketitle
@@ -67,7 +67,7 @@ El notebook con el código completo se puede consultar \href{https://github.com/
 En este informe mostramos solo el código mínimo para ilustrar los pasos más importantes. 
 
 \section{Separación de datos}
-Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) para evaluar nuestra configuración. 
+Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) con la que evaluar, al final del trabajo, la configuración que elijamos. 
 Para eso, podemos tomar el estándar de usar el 15\% del total. 
 Luego, es muy importante que esa partición sea representativa del dataset: que la proporción de etiquetas sea aleatoria y balanceada. 
 Es decir, que la proporción de True y False sea la misma que en el resto del dataset. 
@@ -76,84 +76,21 @@ Por ejemplo, que los valores de ciertos atributos sean muy diferentes al del res
 
 Sabemos que del total, el 72\% de las instancias corresponden a 0 (falsos o mal pronóstico) y 28\% a 1 (verdaderos o buen pronóstico). 
 La propuesta final entonces es mezclar primero las instancias y luego tomar esas proporciones para particionar el held-out. 
-Una forma de hacer eso es utilizar los métodos \texttt{group\_by} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de dataframe de Pandas. 
-Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente. El código que usamos es el siguiente:
-
-\begin{lstlisting}
-   verdaderos = df.groupby('target').get_group(1)
-   falsos = df.groupby('target').get_group(0)
-   held_out_true = verdaderos.sample(frac=0.15, random_state=random_state)
-   held_out_false = falsos.sample(frac=0.15, random_state=random_state)
-   held_out = pd.concat([held_out_false, held_out_true])
-   desarrollo = df.drop(held_out.index)
-   X_dev = desarrollo.drop('target', axis=1)
-   y_dev = desarrollo['target']
-\end{lstlisting}
+Lo implementamos con los métodos \texttt{groupby} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de Pandas, fijando una semilla para que la partición sea reproducible. 
+Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente, lo que deja un held-out de 75 instancias y un conjunto de desarrollo de 425.
 
 Luego de esta separación, procedemos a construir nuestros modelos.
 
 \section{Construcción de modelos}
 Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. 
-Separamos el conjunto de desarrollo de manera proporcional a sus etiquetas. 
-Para eso, usamos \texttt{train\_test\_split} de \texttt{sklearn} estratificado. 
-Nos quedamos con un 0,8 de entrenamiento y 0,2 de validación. 
-Luego entrenamos un árbol con máxima altura 3 y los hiperparámetros por defecto, sin estratificar:
+Como primer paso separamos el conjunto de desarrollo en entrenamiento y validación de manera proporcional a sus etiquetas, usando \texttt{train\_test\_split} de \texttt{sklearn} estratificado, y nos quedamos con un 0,8 de entrenamiento y 0,2 de validación.
+Sobre esa partición entrenamos un árbol con altura máxima 3 y el resto de los hiperparámetros en sus valores por defecto.
 
-\begin{lstlisting}
-   X_train, X_val, y_train, y_val = train_test_split(X_dev, y_dev, test_size=0.2, stratify=y_dev, random_state=random_state)
-
-   arbol = DecisionTreeClassifier(max_depth=3, criterion="gini")
-   arbol.fit(X_train, y_train)
-   y_pred = arbol.predict(X_val)
-\end{lstlisting}
-
-De este árbol obtuvimos un accuracy sobre el subconjunto de validación de 0.6471.
-Luego utilizamos \texttt{X\_dev} e \texttt{y\_dev} con un K-Fold estratificado de 5 particiones, de manera que conserve la proporción de etiquetas. 
-Para cada fold, calculamos Accuracy, Area Under the Precision-Recall Curve (AUPRC) y Area Under the
-Receiver Operating Characteristic Curve (AUCROC). Además, calculamos el score global utilizando únicamente los
-folds de validación. Los resultados se pueden observar en la tabla 1.
-
-\begin{lstlisting}
-   skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
-
-   acc_train_folds, acc_val_folds = np.zeros(5), np.zeros(5)
-   aucroc_train_folds, aucroc_val_folds = np.zeros(5), np.zeros(5)
-   auprc_train_folds, auprc_val_folds = np.zeros(5), np.zeros(5)
-
-   y_val_global = np.zeros(len(y_dev))
-   y_pred_global = np.zeros(len(y_dev))
-   y_proba_global = np.zeros(len(y_dev))
-
-   X_dev_np = X_dev.to_numpy()
-   y_dev_np = y_dev.to_numpy()
-
-   for fold, (train_idx, val_idx) in enumerate(skf.split(X_dev_np, y_dev_np)):
-      X_tr, X_va = X_dev_np[train_idx], X_dev_np[val_idx]
-      y_tr, y_va = y_dev_np[train_idx], y_dev_np[val_idx]
-
-      arbol = DecisionTreeClassifier(max_depth=3, criterion="gini", random_state=random_state)
-      arbol.fit(X_tr, y_tr)
-
-      y_pred_tr = arbol.predict(X_tr)
-      y_proba_tr = arbol.predict_proba(X_tr)[:, 1]
-
-      y_pred_va = arbol.predict(X_va)
-      y_proba_va = arbol.predict_proba(X_va)[:, 1]
-
-      acc_train_folds[fold] = accuracy_score(y_tr, y_pred_tr)
-      aucroc_train_folds[fold] = roc_auc_score(y_tr, y_proba_tr)
-      auprc_train_folds[fold] = average_precision_score(y_tr, y_proba_tr)
-
-      acc_val_folds[fold] = accuracy_score(y_va, y_pred_va)
-      aucroc_val_folds[fold] = roc_auc_score(y_va, y_proba_va)
-      auprc_val_folds[fold] = average_precision_score(y_va, y_proba_va)
-
-      y_val_global[val_idx] = y_va
-      y_pred_global[val_idx] = y_pred_va
-      y_proba_global[val_idx] = y_proba_va
-
-\end{lstlisting}
-
+De este árbol obtuvimos un accuracy de 0.6471 sobre el subconjunto de validación.
+Ese valor sale de una única partición de 85 instancias, por lo que depende bastante de cuáles hayan caído del lado de validación.
+Para obtener una estimación más estable repetimos la medición con validación cruzada sobre el conjunto de desarrollo completo, con un K-fold estratificado de 5 particiones de manera que cada fold conserve la proporción de etiquetas.
+Para cada fold calculamos Accuracy, Area Under the Precision-Recall Curve (AUPRC) y Area Under the Receiver Operating Characteristic Curve (AUCROC), y además el score global utilizando únicamente los folds de validación.
+Los resultados se pueden observar en la tabla \ref{tab:resultados_permutaciones}.
 
 \begin{table}[H]
 \centering
@@ -174,46 +111,22 @@ folds de validación. Los resultados se pueden observar en la tabla 1.
 \textbf{0.6878} & \textbf{0.3508} & 
 \textbf{0.8427} & \textbf{0.5732} \\
 \midrule
-\textbf{Global} & \textbf{(NO)} & 0.6588 & 
-\textbf{(NO)} & 0.3404 & 
-\textbf{(NO)} & 0.5610 \\
+\textbf{Global} & \textbf{(NO)} & \textbf{0.6588} & 
+\textbf{(NO)} & \textbf{0.3404} & 
+\textbf{(NO)} & \textbf{0.5610} \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Resultados obtenidos para las cinco permutaciones y sus promedios.}
+\caption{Métricas de un árbol de altura máxima 3 con criterio Gini, por fold de la validación cruzada estratificada de 5 particiones sobre el conjunto de desarrollo. Global se calcula sobre las predicciones acumuladas de los 5 folds de validación}
 \label{tab:resultados_permutaciones}
 \end{table}
 
-Luego exploramos varias combinaciones de parámetros para árboles de decisión, manteniendo validación cruzada con K = 5 y utilizando ParameterGrid de scikit-learn. 
-Los parámetros fueron altura máxima del árbol: 3, 5 o inifinita, y los criterios fueron Gini y entropía. Los resultados se muestran en la tabla 2.
+Para interpretar estos valores necesitamos un punto de comparación, así que evaluamos con la misma validación cruzada un clasificador que ignora los atributos y predice siempre la clase mayoritaria. Alcanza un accuracy de 0.7176, un AUPRC de 0.2824 que no es otra cosa que la proporción de positivos, y un AUCROC de 0.5000 porque asigna el mismo score a todas las instancias.
 
-\begin{lstlisting}
-   parametros = {"max_depth": [3, 5, None], "criterion": ["gini", "entropy"]}
-   combinaciones = ParameterGrid(parametros)
-
-   accuracy_training = np.zeros(5)
-   accuracy_validation = np.zeros(5)
-
-   for combinacion in combinaciones:
-      for fold, (train_idx, val_idx) in enumerate(skf.split(X_dev_np, y_dev_np)):
-         X_tr, X_va = X_dev_np[train_idx], X_dev_np[val_idx]
-         y_tr, y_va = y_dev_np[train_idx], y_dev_np[val_idx]
-
-         arbol = DecisionTreeClassifier(**combinacion, random_state=random_state)
-         arbol.fit(X_tr, y_tr)
-
-         y_pred_tr = arbol.predict(X_tr)
-         y_proba_tr = arbol.predict_proba(X_tr)[:, 1]
-
-         y_pred_va = arbol.predict(X_va)
-         y_proba_va = arbol.predict_proba(X_va)[:, 1]
-
-         accuracy_training[fold] = accuracy_score(y_tr, y_pred_tr)
-         accuracy_validation[fold] = accuracy_score(y_va, y_pred_va)
-
-      altura = str(combinacion["max_depth"]) if combinacion["max_depth"] is not None else "Infinito"
-      criterio = "Gini" if combinacion["criterion"] == "gini" else "Entropía"
-\end{lstlisting}
+Luego exploramos 6 combinaciones de altura máxima y criterio de corte, manteniendo validación cruzada con K = 5 y generando las combinaciones con \texttt{ParameterGrid} de scikit-learn. 
+Probamos alturas máximas de 3, 5 e infinita, con criterio de corte Gini y Entropía.
+Reutilizamos las mismas particiones para que los valores sean comparables, lo que se verifica en que la fila de altura 3 con Gini reproduce exactamente el resultado de la tabla \ref{tab:resultados_permutaciones}. 
+Los resultados se muestran en la tabla \ref{tab:accuracy_arboles}
 
 \begin{table}[H]
 \centering
@@ -229,16 +142,22 @@ Infinito & Gini     & 1.0000 & 0.6400 \\
 Infinito & Entropía & 1.0000 & 0.5953 \\
 \bottomrule
 \end{tabular}
-\caption{Resultados de Accuracy en entrenamiento y validación según hiperparámetros del árbol de decisión.}
+\caption{Accuracy promedio en entrenamiento y validacion de árboles de decisión, según altura máxima y criterio de corte, con la misma validación cruzada estratificada de 5 particiones sobre el conjunto de desarrollo.}
 \label{tab:accuracy_arboles}
 \end{table}
 
-De la tabla \ref{tab:resultados_permutaciones}, podemos ver que el modelo base (con altura máxima 3 y criterio Gini) logró un accuracy promedio de 0.8224 en entrenamiento y 0.6588 en validación. 
-Además, al medir las predicciones globales sobre todo ese conjunto de validación, conseguimos un AUCROC de 0.5610 y un AUPRC de 0.3404.
+De la tabla \ref{tab:resultados_permutaciones} vemos que el modelo base, con altura máxima 3 y criterio Gini, logró un accuracy de validación de 0.6588, por debajo del 0.7176 del clasificador trivial.
+Su AUCROC de validación es 0.5732 en promedio y 0.5610 global, apenas por encima del 0.5000 de referencia, y su AUPRC de 0.3508 mejora muy poco el 0.2824 que ya da predecir siempre la clase mayoritaria.
+El modelo base entonces casi no captura señal, aunque la brecha con entrenamiento es amplia, 0.8224 contra 0.6588 en accuracy y 0.8427 contra 0.5732 en AUCROC.
 
-En la tabla \ref{tab:accuracy_arboles}, podemos notar cómo a medida que aumentamos la altura máxima del arbol, mejor es la accuracy en los datos de entrenamiento de manera notoria, pero disminuye el accuracy en los datos de validacion. Esto es lo que conocemos como overfitting: el modelo aprende muy bien los datos que tiene de entrenamiento, pero después no es bueno para generalizar. Podemos ver que cuando el arbol no tiene restricción de altura no tiene errores en el conjunto de entrenamiento, pero después tiene una mala performance sobre los datos de validación.
+En la tabla \ref{tab:accuracy_arboles} se observa el comportamiento típico del overfitting.
+Al relajar la altura máxima el accuracy de entrenamiento sube hasta 1.0000, es decir que el árbol memoriza las 340 instancias de cada fold, mientras que el de validación no mejora.
+Con Gini la caída es pareja, de 0.6588 a 0.6400, y con Entropía el peor caso es el árbol sin restricción, que baja a 0.5953.
 
-De entre todas las opciones exploradas vemos que la que mayor accuracy de validación tiene es la de altura máxima 3 y criterio de corte Gini. Si bien los criterios de corte Gini y Entropía experimentan ambos overfitting al crecer la altura máxima, Gini tiene una ventaja en performance en los datos de validación por sobre Entropía.
+Ninguna de las 6 configuraciones supera el 0.7176 del clasificador trivial, y el rango completo de la columna de validación, de 0.5953 a 0.6612, es más angosto que la variación entre folds de una misma configuración, que en la tabla \ref{tab:resultados_permutaciones} va de 0.6000 a 0.7412.
+Por eso no consideramos que ninguna combinación sea preferible a las demás.
+Tampoco el accuracy es la métrica más adecuada para este problema, porque con un 72\% de instancias negativas premia al modelo que ignora la clase minoritaria, que es justamente la que interesa detectar, y por eso de acá en adelante usamos AUCROC.
+En conjunto, las dos tablas muestran que un árbol de decisión no alcanza para estos 200 atributos, lo que motiva explorar otras familias de algoritmos.
 
 \section{Comparación de algoritmos}
 En esta sección probamos árboles de decisión, KNN y SVM, con varias combinaciones de hiperparámetros. Usamos la AUCROC como métrica de comparación.
