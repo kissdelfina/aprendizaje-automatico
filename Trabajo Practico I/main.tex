@@ -366,6 +366,9 @@ Por último, añadimos a la comparación LDA y Naive Bayes.
 \begin{lstlisting}
    lda = LinearDiscriminantAnalysis()
    scores_lda = cross_val_score(lda, X_dev, y_dev, cv=skf, scoring="roc_auc")
+
+   nb = GaussianNB()
+   scores_nb = cross_val_score(nb, X_dev, y_dev, cv=skf, scoring="roc_auc")
 \end{lstlisting}
 
 \begin{table}[H]
@@ -396,10 +399,7 @@ Este modelo, al asumir independencia entre los features, sólo estima la media y
 Uno de los hiperparámetros que podríamos modificar es \texttt{var\_smoothing}, el cual añade una fracción de la varianza más grande de las features a cada una de las estimaciones de varianza. 
 Esto funciona como una regularización de la varianza, y también ayuda a que si hay una feature con varianza casi cero, un valor distinto en test no reciba probabilidad casi cero, dominando el producto.
 
-\begin{lstlisting}
-   nb = GaussianNB()
-   scores_nb = cross_val_score(nb, X_dev, y_dev, cv=skf, scoring="roc_auc")
-\end{lstlisting}
+
 
 \section{Evaluación de performance}
 
