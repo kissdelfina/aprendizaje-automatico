@@ -1,10 +1,43 @@
 \documentclass[10pt,a4paper]{article}
 \usepackage[utf8]{inputenc} % para poder usar tildes en archivos UTF-8
+\usepackage[T1]{fontenc}
 \usepackage[spanish]{babel} % para que comandos como \today den el resultado en castellano
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}} % tabla en vez de cuadro
 \usepackage{a4wide} % márgenes un poco más anchos que lo usual
 \usepackage[sinEntregas]{caratula}
 \usepackage{booktabs}
 \usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[scaled=0.75]{roboto-mono}
+\usepackage{hyperref} % Siempre preferentemente al final de los paquetes
+
+% Definición del fondo gris claro
+\definecolor{codegray}{rgb}{0.96,0.96,0.96}
+
+% Cambiamos 'Listing' por 'Código'
+\renewcommand{\lstlistingname}{Código}
+
+% Configuración del estilo para Python
+\lstdefinestyle{colabstyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{purple},
+    backgroundcolor=\color{codegray},  % Fondo gris claro
+    frame=single,                       % Marco alrededor del bloque
+    rulecolor=\color{black!15},         % Color del borde
+    framesep=6pt,                      % Relleno (padding) interno para que el código no toque los bordes
+    keepspaces=true,             
+    showstringspaces=false,       
+    captionpos=b,                   
+    breaklines=true,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+}
+
+% Aplicamos el estilo como predeterminado para todos los listings
+\lstset{style=colabstyle}
 
 \begin{document}
 
@@ -17,22 +50,110 @@
 
 \integrante{Bravo, Iván Agustín}{001/01}{email1@dominio.com}
 \integrante{Kiss, María Delfina}{72/23}{kissdelfina@gmail.com}
-\integrante{Lützow Holm, Eric}{003/01}{email3@dominio.com}
+\integrante{Lützow Holm, Eric}{323/12}{elholm90@gmail.com}
 \integrante{Mendoza, Juan Cruz}{004/01}{email4@dominio.com}
 \integrante{Rostan, Marcos Andrés}{005/01}{email5@dominio.com}
 % Pongan cuantos integrantes quieran
 
 \maketitle
+\section{Introducción}
+En este trabajo práctico buscamos generar un modelo para determinar si una muestra de células tiene pronóstico de crecimiento anómalo o descontrolado, conocido como hiperplasia.
+Para eso, contamos con un dataset de 500 instancias proveniente de pacientes con lesiones pretumorales, en el que se midió la expresión de 200 genes. 
+Cada instancia fue etiquetada como verdadero o buen pronóstico si no hubo indicios de una nueva hiperplasia, o falso o mal pronóstico en caso contrario.
+Nuestra tarea fue probar diferentes algoritmos de aprendizaje automático con distintas configuraciones en busca del que diera mejores resultados en la clasificación.
+Los algoritmos que usamos fueron árboles de decisión, K vecinos más cercanos (KNN), support vector machines (SVM), análisis discriminante lineal (LDA) y Naive Bayes.
+Utilizamos el lenguaje Python. 
+El notebook con el código completo se puede consultar \href{https://github.com/kissdelfina/aprendizaje-automatico/blob/main/Trabajo%20Practico%20I/TP_Aprendizaje_Automatico_I.ipynb.}{aquí}
+En este informe mostramos solo el código mínimo para ilustrar los pasos más importantes. 
 
 \section{Separación de datos}
-Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) para evaluar nuestra configuración. Para eso, podemos tomar el estándar de usar el 15\% del total. Luego, es muy importante que esa partición sea representativa del dataset: que la proporción de etiquetas sea aleatoria y balanceada. Es decir, que la proporción de True y False sea la misma que en el resto del dataset. Además, ese 15\% no debe tener una propiedad que el resto del dataset no tenga y viceversa. Por ejemplo, que los valores de ciertos atributos sean muy diferentes al del resto.
+Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) para evaluar nuestra configuración. 
+Para eso, podemos tomar el estándar de usar el 15\% del total. 
+Luego, es muy importante que esa partición sea representativa del dataset: que la proporción de etiquetas sea aleatoria y balanceada. 
+Es decir, que la proporción de True y False sea la misma que en el resto del dataset. 
+Además, ese 15\% no debe tener una propiedad que el resto del dataset no tenga y viceversa. 
+Por ejemplo, que los valores de ciertos atributos sean muy diferentes al del resto.
 
-Sabemos que del total, el 72\% de las instancias corresponden a 0 (False) y 28\% a 1 (True). La propuesta final entonces es mezclar primero las instancias y luego tomar esas proporciones para particionar el held-out. Una forma de hacer eso es utilizar los métodos \texttt{group\_by} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de dataframe de Pandas. Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente.
+Sabemos que del total, el 72\% de las instancias corresponden a 0 (falsos o mal pronóstico) y 28\% a 1 (verdaderos o buen pronóstico). 
+La propuesta final entonces es mezclar primero las instancias y luego tomar esas proporciones para particionar el held-out. 
+Una forma de hacer eso es utilizar los métodos \texttt{group\_by} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de dataframe de Pandas. 
+Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente. El código que usamos es el siguiente:
+
+\begin{lstlisting}
+   verdaderos = df.groupby('target').get_group(1)
+   falsos = df.groupby('target').get_group(0)
+   held_out_true = verdaderos.sample(frac=0.15, random_state=random_state)
+   held_out_false = falsos.sample(frac=0.15, random_state=random_state)
+   held_out = pd.concat([held_out_false, held_out_true])
+   desarrollo = df.drop(held_out.index)
+   X_dev = desarrollo.drop('target', axis=1)
+   y_dev = desarrollo['target']
+\end{lstlisting}
+
+Luego de esta separación, procedemos a construir nuestros modelos.
 
 \section{Construcción de modelos}
-Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. Separamos el desarrollo nuevamente de manera proporcional a sus etiquetas. Para eso, usamos \texttt{train\_test\_split} de \texttt{sklearn} estratificado. Nos quedamos con un 0,8 de entrenamiento y 0,2 de validación. Obtuvimos un accuracy sobre el subconjunto de validación de 0.6471.
+Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. 
+Separamos el conjunto de desarrollo de manera proporcional a sus etiquetas. 
+Para eso, usamos \texttt{train\_test\_split} de \texttt{sklearn} estratificado. 
+Nos quedamos con un 0,8 de entrenamiento y 0,2 de validación. 
+Luego entrenamos un árbol con máxima altura 3 y los hiperparámetros por defecto, sin estratificar:
 
-Utilizamos \texttt{X\_dev} e \texttt{y\_dev} con un K-Fold estratificado, de manera que conserve la proporción de etiquetas.
+\begin{lstlisting}
+   X_train, X_val, y_train, y_val = train_test_split(X_dev, y_dev, test_size=0.2, stratify=y_dev, random_state=random_state)
+
+   arbol = DecisionTreeClassifier(max_depth=3, criterion="gini")
+   arbol.fit(X_train, y_train)
+   y_pred = arbol.predict(X_val)
+\end{lstlisting}
+
+De este árbol obtuvimos un accuracy sobre el subconjunto de validación de 0.6471.
+Luego utilizamos \texttt{X\_dev} e \texttt{y\_dev} con un K-Fold estratificado de 5 particiones, de manera que conserve la proporción de etiquetas. 
+Para cada fold, calculamos Accuracy, Area Under the Precision-Recall Curve (AUPRC) y Area Under the
+Receiver Operating Characteristic Curve (AUCROC). Además, calculamos el score global utilizando únicamente los
+folds de validación. Los resultados se pueden observar en la tabla 1.
+
+\begin{lstlisting}
+   skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
+
+   acc_train_folds, acc_val_folds = np.zeros(5), np.zeros(5)
+   aucroc_train_folds, aucroc_val_folds = np.zeros(5), np.zeros(5)
+   auprc_train_folds, auprc_val_folds = np.zeros(5), np.zeros(5)
+
+   y_val_global = np.zeros(len(y_dev))
+   y_pred_global = np.zeros(len(y_dev))
+   y_proba_global = np.zeros(len(y_dev))
+
+   X_dev_np = X_dev.to_numpy()
+   y_dev_np = y_dev.to_numpy()
+
+   for fold, (train_idx, val_idx) in enumerate(skf.split(X_dev_np, y_dev_np)):
+      X_tr, X_va = X_dev_np[train_idx], X_dev_np[val_idx]
+      y_tr, y_va = y_dev_np[train_idx], y_dev_np[val_idx]
+
+      arbol = DecisionTreeClassifier(max_depth=3, criterion="gini", random_state=random_state)
+      arbol.fit(X_tr, y_tr)
+
+      y_pred_tr = arbol.predict(X_tr)
+      y_proba_tr = arbol.predict_proba(X_tr)[:, 1]
+
+      y_pred_va = arbol.predict(X_va)
+      y_proba_va = arbol.predict_proba(X_va)[:, 1]
+
+      acc_train_folds[fold] = accuracy_score(y_tr, y_pred_tr)
+      aucroc_train_folds[fold] = roc_auc_score(y_tr, y_proba_tr)
+      auprc_train_folds[fold] = average_precision_score(y_tr, y_proba_tr)
+
+      acc_val_folds[fold] = accuracy_score(y_va, y_pred_va)
+      aucroc_val_folds[fold] = roc_auc_score(y_va, y_proba_va)
+      auprc_val_folds[fold] = average_precision_score(y_va, y_proba_va)
+
+      y_val_global[val_idx] = y_va
+      y_pred_global[val_idx] = y_pred_va
+      y_proba_global[val_idx] = y_proba_va
+
+\end{lstlisting}
+
 
 \begin{table}[H]
 \centering
@@ -63,6 +184,37 @@ Utilizamos \texttt{X\_dev} e \texttt{y\_dev} con un K-Fold estratificado, de man
 \label{tab:resultados_permutaciones}
 \end{table}
 
+Luego exploramos varias combinaciones de parámetros para árboles de decisión, manteniendo validación cruzada con K = 5 y utilizando ParameterGrid de scikit-learn. 
+Los parámetros fueron altura máxima del árbol: 3, 5 o inifinita, y los criterios fueron Gini y entropía. Los resultados se muestran en la tabla 2.
+
+\begin{lstlisting}
+   parametros = {"max_depth": [3, 5, None], "criterion": ["gini", "entropy"]}
+   combinaciones = ParameterGrid(parametros)
+
+   accuracy_training = np.zeros(5)
+   accuracy_validation = np.zeros(5)
+
+   for combinacion in combinaciones:
+      for fold, (train_idx, val_idx) in enumerate(skf.split(X_dev_np, y_dev_np)):
+         X_tr, X_va = X_dev_np[train_idx], X_dev_np[val_idx]
+         y_tr, y_va = y_dev_np[train_idx], y_dev_np[val_idx]
+
+         arbol = DecisionTreeClassifier(**combinacion, random_state=random_state)
+         arbol.fit(X_tr, y_tr)
+
+         y_pred_tr = arbol.predict(X_tr)
+         y_proba_tr = arbol.predict_proba(X_tr)[:, 1]
+
+         y_pred_va = arbol.predict(X_va)
+         y_proba_va = arbol.predict_proba(X_va)[:, 1]
+
+         accuracy_training[fold] = accuracy_score(y_tr, y_pred_tr)
+         accuracy_validation[fold] = accuracy_score(y_va, y_pred_va)
+
+      altura = str(combinacion["max_depth"]) if combinacion["max_depth"] is not None else "Infinito"
+      criterio = "Gini" if combinacion["criterion"] == "gini" else "Entropía"
+\end{lstlisting}
+
 \begin{table}[H]
 \centering
 \begin{tabular}{llcc}
@@ -81,15 +233,34 @@ Infinito & Entropía & 1.0000 & 0.5953 \\
 \label{tab:accuracy_arboles}
 \end{table}
 
-Del Cuadro \ref{tab:resultados_permutaciones}, podemos ver que el modelo base (con altura máxima 3 y criterio Gini) logró un accuracy promedio de 0.8224 en entrenamiento y 0.6588 en validación. Ademas, al medir las predicciones globales sobre todo ese conjunto de validación, conseguimos un AUCROC de 0.5610 y un AUPRC de 0.3404.
+De la tabla \ref{tab:resultados_permutaciones}, podemos ver que el modelo base (con altura máxima 3 y criterio Gini) logró un accuracy promedio de 0.8224 en entrenamiento y 0.6588 en validación. 
+Además, al medir las predicciones globales sobre todo ese conjunto de validación, conseguimos un AUCROC de 0.5610 y un AUPRC de 0.3404.
 
-En el Cuadro \ref{tab:accuracy_arboles}, podemos notar cómo a medida que aumentamos la altura máxima del arbol, mejor es la accuracy en los datos de entrenamiento de manera notoria, pero disminuye el accuracy en los datos de validacion. Esto es lo que conocemos como overfitting: el modelo aprende muy bien los datos que tiene de entrenamiento, pero después no es bueno para generalizar. Podemos ver que cuando el arbol no tiene restricción de altura no tiene errores en el conjunto de entrenamiento, pero después tiene una mala performance sobre los datos de validación.
+En la tabla \ref{tab:accuracy_arboles}, podemos notar cómo a medida que aumentamos la altura máxima del arbol, mejor es la accuracy en los datos de entrenamiento de manera notoria, pero disminuye el accuracy en los datos de validacion. Esto es lo que conocemos como overfitting: el modelo aprende muy bien los datos que tiene de entrenamiento, pero después no es bueno para generalizar. Podemos ver que cuando el arbol no tiene restricción de altura no tiene errores en el conjunto de entrenamiento, pero después tiene una mala performance sobre los datos de validación.
 
 De entre todas las opciones exploradas vemos que la que mayor accuracy de validación tiene es la de altura máxima 3 y criterio de corte Gini. Si bien los criterios de corte Gini y Entropía experimentan ambos overfitting al crecer la altura máxima, Gini tiene una ventaja en performance en los datos de validación por sobre Entropía.
 
 \section{Comparación de algoritmos}
+En esta sección probamos árboles de decisión, KNN y SVM, con varias combinaciones de hiperparámetros. Usamos la AUCROC como métrica de comparación.
+
 \subsection{Árboles de decisión}
 Como hiperparámetros tuvimos en cuenta la profundidad máxima, la mínima cantidad de instancias que necesita un nodo para dividirse, la mínima cantidad de instancias de cada hoja, el criterio (Gini o Entropía) y la máxima cantidad de atributos, probando la raíz cuadrada y el logaritmo de la cantidad total.
+
+\begin{lstlisting}
+   parametros_arbol = {"max_depth": [3, 5, 10, 20, None],
+                     "min_samples_split": [2, 5, 10, 20], 
+                     "min_samples_leaf": [1, 5, 10, 15], 
+                     "criterion": ["gini", "entropy"], 
+                     "max_features": ["sqrt", "log2", None]} 
+
+   arbol_base = DecisionTreeClassifier(random_state=random_state)
+
+   buscador_arbol = RandomizedSearchCV(estimator=arbol_base, param_distributions=parametros_arbol,
+                                       n_iter=50, scoring="roc_auc", cv=skf, random_state=random_state)
+
+   buscador_arbol.fit(X_dev, y_dev)
+\end{lstlisting}
+
 
 Los mejores hiperparámetros encontrados fueron: 
 \texttt{'min\_samples\_split': 10, 
@@ -97,10 +268,11 @@ Los mejores hiperparámetros encontrados fueron:
 'max\_features': 'log2', 
 'max\_depth': 5, 
 'criterion': 'gini'}
-Con un AUCROC score de 0.6740
+Con un AUCROC score de 0.6740.
 
 \subsection{KNN}
-Para KNN, primero hay que tener en cuenta que suele ser mejor escalar las features. Como pueden tener escalas muy distintas, las features de mayor rango pueden llegar a dominar la distancia. Hiperparámetros:
+Para KNN, primero hay que tener en cuenta que suele ser mejor escalar las features. 
+Como pueden tener escalas muy distintas, las features de mayor rango pueden llegar a dominar la distancia. Hiperparámetros:
 \begin{itemize}
     \item \texttt{n\_neighbours}: mientras un k chico se puede llegar a ajustar al ruido local de cada datapoint, un k grande simplemente se aproxima a predecir la clase mayoritaria.
 
@@ -109,8 +281,23 @@ Para KNN, primero hay que tener en cuenta que suele ser mejor escalar las featur
     \item \texttt{metric}: que es la distancia que usamos para medir cercanía.
 \end{itemize}
 
-Mejores hiperparámetros encontrados para KNN: texttt{'scaler': None, 'knn\_weights': 'distance', 'knn\_n\_neighbors': 21, 'knn\_metric': 'manhattan'}
-Mejor score AUCROC: 0.8474
+\begin{lstlisting}
+   parametros_knn = {"knn__n_neighbors": [3, 5, 7, 10, 15, 21, 31, 41, 51, 61, 75],
+                     "knn__weights": ["uniform", "distance"], 
+                     "knn__metric": ["euclidean", "manhattan"], 
+                     "scaler": [StandardScaler(), None]}  
+
+   knn_pipe = Pipeline([
+      ("scaler", StandardScaler()),
+      ("knn", KNeighborsClassifier())])
+
+   buscador_knn = RandomizedSearchCV(estimator=knn_pipe, param_distributions=parametros_knn,
+                                    n_iter=50, scoring="roc_auc", cv=skf, random_state=random_state)
+   buscador_knn.fit(X_dev, y_dev)
+\end{lstlisting}
+
+Mejores hiperparámetros encontrados para KNN: \texttt{'scaler': None, 'knn\_weights': 'distance', 'knn\_n\_neighbors': 21, 'knn\_metric': 'manhattan'}
+El mejor score AUCROC fue 0.8474.
 
 \subsection{SVM}
 Para SVM, también necesitamos escalar los features. Hiperparámetros:
@@ -124,8 +311,25 @@ Para SVM, también necesitamos escalar los features. Hiperparámetros:
 
 Para \texttt{Gamma} y \texttt{C}, se suelen probar diferentes órdenes de magnitud. Para \texttt{degree}, grados mayores a 3 puede generar un espacio de features enorme y sobreajustar con pocas instancias.
 
-Mejores hiperparámetros encontrados para SVM: texttt{'svm\_kernel': 'poly', 'svm\_gamma': 1, 'svm\_degree': 2, 'svm\_C': 1000, 'scaler': None}
-Mejor score AUCROC: 0.8587
+\begin{lstlisting}
+   parametros_svm = [
+      {"svm__kernel": ["linear"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], "scaler": [StandardScaler(), None]},
+      {"svm__kernel": ["rbf"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000],
+      "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]},
+      {"svm__kernel": ["poly"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000],
+      "svm__degree": [2, 3], "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]}]
+
+   svm_pipe = Pipeline([
+      ("scaler", StandardScaler()),
+      ("svm", SVC(random_state=random_state))])
+
+   buscador_svm = RandomizedSearchCV(estimator=svm_pipe, param_distributions=parametros_svm,
+                                    n_iter=50, scoring="roc_auc", cv=skf, random_state=random_state)
+   buscador_svm.fit(X_dev, y_dev)
+\end{lstlisting}
+
+Los mejores hiperparámetros encontrados para SVM fueron \texttt{'svm\_kernel': 'poly', 'svm\_gamma': 1, 'svm\_degree': 2, 'svm\_C': 1000, 'scaler': None}
+El mejor score AUCROC fue 0.8587.
 
 Vemos que las top 5 mejores configuraciones tienen la misma AUCROC y sólo cambian el C y Gamma, indicando que sin escalar los mismos no tienen relevancia.
 
@@ -153,9 +357,16 @@ Vemos que las top 5 mejores configuraciones tienen la misma AUCROC y sólo cambi
 \label{tab:svm_gridsearch}
 \end{table}
 
-Resulta muy llamativo ver que tanto para SVM y KNN, las mejores configuraciones de hiperparámetros según AUCROC fueron aquellas que no utilizaron el Scaler. Esto indica que las features con un rango más grande terminaron siendo aquellas que también tenían mayor poder predictivo.
+Resulta muy llamativo ver que tanto para SVM y KNN, las mejores configuraciones de hiperparámetros según AUCROC fueron aquellas que no utilizaron el Scaler. 
+Esto indica que las features con un rango más grande terminaron siendo aquellas que también tenían mayor poder predictivo.
 
 \subsection{LDA y Naive Bayes}
+Por último, añadimos a la comparación LDA y Naive Bayes.
+
+\begin{lstlisting}
+   lda = LinearDiscriminantAnalysis()
+   scores_lda = cross_val_score(lda, X_dev, y_dev, cv=skf, scoring="roc_auc")
+\end{lstlisting}
 
 \begin{table}[H]
 \centering
@@ -176,13 +387,27 @@ Resulta muy llamativo ver que tanto para SVM y KNN, las mejores configuraciones 
 \label{tab:aucroc_lda_nb}
 \end{table}
 
-Vemos que el AUCROC de LDA es el peor con AUC = 0.6407. Esto puede deberse a que se está estimando una matriz de covarianza de 200x200 (por las 200 features con que se entrenan) con pocas instancias de train por fold, lo que resulta en una estimación ruidosa y casi singular. En este caso, podríamos utilizar el hiperparámetro de \texttt{shrinkage} que regulariza la matriz de covarianza.
+Vemos que el AUCROC de LDA es el peor con AUC = 0.6407. 
+Esto puede deberse a que se está estimando una matriz de covarianza de 200x200 (por las 200 features con que se entrenan) con pocas instancias de train por fold, lo que resulta en una estimación ruidosa y casi singular. 
+En este caso, podríamos utilizar el hiperparámetro de \texttt{shrinkage} que regulariza la matriz de covarianza.
 
-Por otro lado, Naive Bayes, incluso sin haber hecho una búsqueda de hiperparámetros, tuvo un AUC = 0.7376, similar a la performance de SVM y KNN. Este modelo, al asumir independencia entre los features, sólo estima la media y varianza por cada gen, por lo que cada una de las estimaciones puede ser buena incluso con pocos datos. Uno de los hiperparámetros que podríamos modificar es \texttt{var\_smoothing}, el cual añade una fracción de la varianza más grande de las features a cada una de las estimaciones de varianza. Esto funciona como una regularización de la varianza, y también ayuda a que si hay una feature con varianza casi cero, un valor distinto en test no reciba probabilidad casi cero, dominando el producto.
+Por otro lado, Naive Bayes, incluso sin haber hecho una búsqueda de hiperparámetros, tuvo un AUC = 0.7376, similar a la performance de SVM y KNN. 
+Este modelo, al asumir independencia entre los features, sólo estima la media y varianza por cada gen, por lo que cada una de las estimaciones puede ser buena incluso con pocos datos. 
+Uno de los hiperparámetros que podríamos modificar es \texttt{var\_smoothing}, el cual añade una fracción de la varianza más grande de las features a cada una de las estimaciones de varianza. 
+Esto funciona como una regularización de la varianza, y también ayuda a que si hay una feature con varianza casi cero, un valor distinto en test no reciba probabilidad casi cero, dominando el producto.
+
+\begin{lstlisting}
+   nb = GaussianNB()
+   scores_nb = cross_val_score(nb, X_dev, y_dev, cv=skf, scoring="roc_auc")
+\end{lstlisting}
 
 \section{Evaluación de performance}
 
 
 \section{Conclusiones}
+
+\section{Discusión}
+
+\section{Bibliografía consultada}
 
 \end{document}
