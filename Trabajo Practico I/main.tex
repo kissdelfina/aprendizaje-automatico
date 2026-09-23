@@ -48,7 +48,7 @@
 \materia{Aprendizaje Automático I}
 \grupo{Grupo 11}
 
-\integrante{Bravo, Iván Agustín}{001/01}{email1@dominio.com}
+\integrante{Bravo, Iván Agustín}{786/23}{bravoivanagustin@gmail.com}
 \integrante{Kiss, María Delfina}{72/23}{kissdelfina@gmail.com}
 \integrante{Lützow Holm, Eric}{323/12}{elholm90@gmail.com}
 \integrante{Mendoza, Juan Cruz}{004/01}{email4@dominio.com}
@@ -57,29 +57,18 @@
 
 \maketitle
 \section{Introducción}
-En este trabajo práctico buscamos generar un modelo para determinar si una muestra de células tiene pronóstico de crecimiento anómalo o descontrolado, conocido como hiperplasia.
-Para eso, contamos con un dataset de 500 instancias proveniente de pacientes con lesiones pretumorales, en el que se midió la expresión de 200 genes. 
-Cada instancia fue etiquetada como verdadero o buen pronóstico si no hubo indicios de una nueva hiperplasia, o falso o mal pronóstico en caso contrario.
-Nuestra tarea fue probar diferentes algoritmos de aprendizaje automático con distintas configuraciones en busca del que diera mejores resultados en la clasificación.
-Los algoritmos que usamos fueron árboles de decisión, K vecinos más cercanos (KNN), support vector machines (SVM), análisis discriminante lineal (LDA) y Naive Bayes.
-Utilizamos el lenguaje Python. 
-El notebook con el código completo se puede consultar \href{https://github.com/kissdelfina/aprendizaje-automatico/blob/main/Trabajo%20Practico%20I/TP_Aprendizaje_Automatico_I.ipynb.}{aquí}
-En este informe mostramos solo el código mínimo para ilustrar los pasos más importantes. 
+En este trabajo práctico evaluamos distintos modelos de aprendizaje automático para determinar si una muestra de células tiene pronóstico de crecimiento anómalo o descontrolado, condición conocida como hiperplasia. El dataset consta de 500 instancias provenientes de pacientes con lesiones pretumorales, en las que se midió la expresión de 200 genes. Cada instancia está etiquetada como verdadero (buen pronóstico) si no hubo indicios de una nueva hiperplasia, o falso (mal pronóstico) en caso contrario.
+
+Probamos diferentes algoritmos con distintas configuraciones de hiperparámetros, con el fin de comparar su comportamiento en esta tarea de clasificación: árboles de decisión, K vecinos más cercanos (KNN), support vector machines (SVM), análisis discriminante lineal (LDA) y Naive Bayes. La implementación se realizó en Python.\footnote{El notebook con el código completo se puede consultar \href{https://github.com/kissdelfina/aprendizaje-automatico/blob/main/Trabajo\%20Practico\%20I/TP_Aprendizaje_Automatico_I.ipynb}{aquí}. En este informe incluimos solo el código mínimo necesario para ilustrar los pasos más importantes.}
 
 \section{Separación de datos}
-Queremos partir el dataset de manera de tener una partición de held-out (conjunto de control o de evaluación) con la que evaluar, al final del trabajo, la configuración que elijamos. 
-Para eso, podemos tomar el estándar de usar el 15\% del total. 
-Luego, es muy importante que esa partición sea representativa del dataset: que la proporción de etiquetas sea aleatoria y balanceada. 
-Es decir, que la proporción de True y False sea la misma que en el resto del dataset. 
-Además, ese 15\% no debe tener una propiedad que el resto del dataset no tenga y viceversa. 
-Por ejemplo, que los valores de ciertos atributos sean muy diferentes al del resto.
+Para estimar la performance del modelo final dividimos el dataset en dos particiones: un conjunto de desarrollo, sobre el cual entrenamos y seleccionamos los modelos, y un conjunto de control, para evaluar al final del trabajo la configuración elegida. Siguiendo el estándar habitual, destinamos el 15\% de las instancias al conjunto de control.
 
-Sabemos que del total, el 72\% de las instancias corresponden a 0 (falsos o mal pronóstico) y 28\% a 1 (verdaderos o buen pronóstico). 
-La propuesta final entonces es mezclar primero las instancias y luego tomar esas proporciones para particionar el held-out. 
-Lo implementamos con los métodos \texttt{groupby} (agrupar por target) y luego \texttt{sample} (tomar una muestra al azar) de Pandas, fijando una semilla para que la partición sea reproducible. 
-Queremos $0,15 \cdot 359$ de etiqueta 0 y $0,15 \cdot 141$ de etiqueta 1, o sea, 54 y 21 respectivamente, lo que deja un held-out de 75 instancias y un conjunto de desarrollo de 425.
+La partición debe ser representativa del dataset, la proporción de etiquetas tiene que coincidir con la del conjunto de desarrollo, y el conjunto de control no debería presentar propiedades ausentes en el resto de los datos, ni a la inversa.
 
-Luego de esta separación, procedemos a construir nuestros modelos.
+Del total, 359 instancias (72\%) corresponden a la etiqueta 0 (mal pronóstico) y 141 (28\%) a la etiqueta 1 (buen pronóstico). Para preservar esas proporciones aplicamos muestreo estratificado: agrupamos las instancias por etiqueta y extrajimos una muestra aleatoria del 15\% dentro de cada grupo. Lo implementamos con los métodos \texttt{groupby} y \texttt{sample} de Pandas, fijando una semilla para que la partición sea reproducible. El resultado son $0{,}15 \cdot 359 = 54$ instancias de etiqueta 0 y $0{,}15 \cdot 141 \approx 21$ de etiqueta 1, lo que deja un conjunto de control de 75 instancias y un conjunto de desarrollo de 425.
+ 
+Con la separación establecida, construimos los modelos.
 
 \section{Construcción de modelos}
 Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. 
@@ -205,14 +194,6 @@ Como pueden tener escalas muy distintas, las features de mayor rango pueden lleg
                      "knn__weights": ["uniform", "distance"], 
                      "knn__metric": ["euclidean", "manhattan"], 
                      "scaler": [StandardScaler(), None]}  
-
-   knn_pipe = Pipeline([
-      ("scaler", StandardScaler()),
-      ("knn", KNeighborsClassifier())])
-
-   buscador_knn = RandomizedSearchCV(estimator=knn_pipe, param_distributions=parametros_knn,
-                                    n_iter=50, scoring="roc_auc", cv=skf, random_state=random_state)
-   buscador_knn.fit(X_dev, y_dev)
 \end{lstlisting}
 
 Mejores hiperparámetros encontrados para KNN: \texttt{'scaler': None, 'knn\_weights': 'distance', 'knn\_n\_neighbors': 21, 'knn\_metric': 'manhattan'}
@@ -233,18 +214,8 @@ Para \texttt{Gamma} y \texttt{C}, se suelen probar diferentes órdenes de magnit
 \begin{lstlisting}
    parametros_svm = [
       {"svm__kernel": ["linear"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], "scaler": [StandardScaler(), None]},
-      {"svm__kernel": ["rbf"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000],
-      "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]},
-      {"svm__kernel": ["poly"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000],
-      "svm__degree": [2, 3], "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]}]
-
-   svm_pipe = Pipeline([
-      ("scaler", StandardScaler()),
-      ("svm", SVC(random_state=random_state))])
-
-   buscador_svm = RandomizedSearchCV(estimator=svm_pipe, param_distributions=parametros_svm,
-                                    n_iter=50, scoring="roc_auc", cv=skf, random_state=random_state)
-   buscador_svm.fit(X_dev, y_dev)
+      {"svm__kernel": ["rbf"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]},
+      {"svm__kernel": ["poly"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], "svm__degree": [2, 3], "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], "scaler": [StandardScaler(), None]}]
 \end{lstlisting}
 
 Los mejores hiperparámetros encontrados para SVM fueron \texttt{'svm\_kernel': 'poly', 'svm\_gamma': 1, 'svm\_degree': 2, 'svm\_C': 1000, 'scaler': None}
@@ -282,14 +253,6 @@ Esto indica que las features con un rango más grande terminaron siendo aquellas
 \subsection{LDA y Naive Bayes}
 Por último, añadimos a la comparación LDA y Naive Bayes.
 
-\begin{lstlisting}
-   lda = LinearDiscriminantAnalysis()
-   scores_lda = cross_val_score(lda, X_dev, y_dev, cv=skf, scoring="roc_auc")
-
-   nb = GaussianNB()
-   scores_nb = cross_val_score(nb, X_dev, y_dev, cv=skf, scoring="roc_auc")
-\end{lstlisting}
-
 \begin{table}[H]
 \centering
 \begin{tabular}{c|cc}
@@ -318,10 +281,13 @@ Este modelo, al asumir independencia entre los features, sólo estima la media y
 Uno de los hiperparámetros que podríamos modificar es \texttt{var\_smoothing}, el cual añade una fracción de la varianza más grande de las features a cada una de las estimaciones de varianza. 
 Esto funciona como una regularización de la varianza, y también ayuda a que si hay una feature con varianza casi cero, un valor distinto en test no reciba probabilidad casi cero, dominando el producto.
 
-
-
 \section{Evaluación de performance}
 
+El mejor modelo que obtuvimos durante el desarrollo fue el entrenado con el algoritmo \textbf{COMPLETAR} con hiperparámetros \textbf{COMPLETAR}.
+
+Para aproximar el desempeño de este modelo sobre el conjunto de control (en posesión de los profesores), entrenamos el modelo con todas las instancias del conjunto de desarrollo y luego lo evaluamos sobre el conjunto de evaluación que separamos al principio del trabajo. De esta forma obtuvimos una estimación del desempeño final del modelo en datos no vistos previamente, sin sobreestimarlo.
+
+El valor de AUC-ROC obtenido por el modelo final sobre este conjunto fue de \textbf{COMPLETAR}. Los scores de cada instancia del conjunto de control se encuentran adjuntos con el trabajo, en el archivo \texttt{11\_y\_pred\_control\_\textbf{COMPLETAR}.csv}.
 
 \section{Conclusiones}
 
