@@ -66,7 +66,7 @@ Para estimar la performance del modelo final dividimos el dataset en dos partici
 
 La partición debe ser representativa del dataset, la proporción de etiquetas tiene que coincidir con la del conjunto de desarrollo, y el conjunto de control no debería presentar propiedades ausentes en el resto de los datos, ni a la inversa.
 
-Del total, 353 instancias (70,6\%) corresponden a la etiqueta 0 (mal pronóstico) y 147 (29,4\%) a la etiqueta 1 (buen pronóstico). Para preservar esas proporciones aplicamos muestreo estratificado: agrupamos las instancias por etiqueta y extrajimos una muestra aleatoria del 15\% dentro de cada grupo. Lo implementamos con los métodos \texttt{groupby} y \texttt{sample} de Pandas, fijando una semilla para que la partición sea reproducible. El resultado son $0{,}15 \cdot 353 \approx 53$ instancias de etiqueta 0 y $0{,}15 \cdot 147 \approx 22$ de etiqueta 1, lo que deja un conjunto de control de 75 instancias y un conjunto de desarrollo de 425.
+Del total, 359 instancias (71,8\%) corresponden a la etiqueta 0 (mal pronóstico) y 141 (28,2\%) a la etiqueta 1 (buen pronóstico). Para preservar esas proporciones aplicamos muestreo estratificado: agrupamos las instancias por etiqueta y extrajimos una muestra aleatoria del 15\% dentro de cada grupo. Lo implementamos con los métodos \texttt{groupby} y \texttt{sample} de Pandas, fijando una semilla para que la partición sea reproducible. El resultado son $0{,}15 \cdot 359 \approx 54$ instancias de etiqueta 0 y $0{,}15 \cdot 141 \approx 21$ de etiqueta 1, lo que deja un conjunto de control de 75 instancias y un conjunto de desarrollo de 425.
  
 Con la separación establecida, construimos los modelos.
 
@@ -75,7 +75,7 @@ Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una es
 Como primer paso separamos el conjunto de desarrollo en entrenamiento y validación de manera proporcional a sus etiquetas, usando \texttt{train\_test\_split} de \texttt{sklearn} estratificado, y nos quedamos con un 0,8 de entrenamiento y 0,2 de validación.
 Sobre esa partición entrenamos un árbol con altura máxima 3 y el resto de los hiperparámetros en sus valores por defecto.
 
-De este árbol obtuvimos un accuracy de 0.6941 sobre el subconjunto de validación.
+De este árbol obtuvimos un accuracy de 0.6471 sobre el subconjunto de validación.
 Ese valor sale de una única partición de 85 instancias, por lo que depende bastante de cuáles hayan caído del lado de validación.
 Para obtener una estimación más estable repetimos la medición con validación cruzada sobre el conjunto de desarrollo completo, con un K-fold estratificado de 5 particiones de manera que cada fold conserve la proporción de etiquetas.
 Para cada fold calculamos Accuracy, Area Under the Precision-Recall Curve (AUPRC) y Area Under the Receiver Operating Characteristic Curve (AUCROC), y además el score global utilizando únicamente los folds de validación.
@@ -90,19 +90,19 @@ Los resultados se pueden observar en la Tabla \ref{tab:resultados_permutaciones}
 \textbf{AUPRC (train)} & \textbf{AUPRC (val)} & 
 \textbf{AUCROC (train)} & \textbf{AUCROC (val)} \\
 \midrule
-1 & 0.8441 & 0.7294 & 0.6879 & 0.4695 & 0.8383 & 0.7277 \\ 
-2 & 0.8441 & 0.6353 & 0.6701 & 0.3670 & 0.8476 & 0.5900 \\ 
-3 & 0.8588 & 0.7176 & 0.7491 & 0.4976 & 0.8524 & 0.6917 \\ 
-4 & 0.8382 & 0.6824 & 0.6996 & 0.4000 & 0.8302 & 0.6590 \\ 
-5 & 0.8412 & 0.5294 & 0.6583 & 0.3003 & 0.8505 & 0.5313 \\
+1 & 0.8265 & 0.6000 & 0.7153 & 0.3265 & 0.8626 & 0.5697 \\ 
+2 & 0.8265 & 0.7412 & 0.6862 & 0.4213 & 0.8037 & 0.6411 \\ 
+3 & 0.8353 & 0.6235 & 0.6981 & 0.2895 & 0.8506 & 0.4754 \\ 
+4 & 0.8265 & 0.6471 & 0.6900 & 0.3594 & 0.8429 & 0.6117 \\ 
+5 & 0.7971 & 0.6824 & 0.6491 & 0.3574 & 0.8538 & 0.5683 \\
 \midrule
-\textbf{Promedios} & \textbf{0.8453} & \textbf{0.6588} & 
-\textbf{0.6930} & \textbf{0.4069} & 
-\textbf{0.8438} & \textbf{0.6399} \\
+\textbf{Promedios} & \textbf{0.8224} & \textbf{0.6588} & 
+\textbf{0.6878} & \textbf{0.3508} & 
+\textbf{0.8427} & \textbf{0.5732} \\
 \midrule
 \textbf{Global} & \textbf{(NO)} & \textbf{0.6588} & 
-\textbf{(NO)} & \textbf{0.4054} & 
-\textbf{(NO)} & \textbf{0.6152} \\
+\textbf{(NO)} & \textbf{0.3404} & 
+\textbf{(NO)} & \textbf{0.5610} \\
 \bottomrule
 \end{tabular}%
 }
@@ -110,12 +110,12 @@ Los resultados se pueden observar en la Tabla \ref{tab:resultados_permutaciones}
 \label{tab:resultados_permutaciones}
 \end{table}
 
-Para interpretar estos valores necesitamos un punto de comparación, así que evaluamos con la misma validación cruzada un clasificador que ignora los atributos y predice siempre la clase mayoritaria. Alcanza un accuracy de 0.7059, un AUPRC de 0.2941 que no es otra cosa que la proporción de positivos, y un AUCROC de 0.5000 porque asigna el mismo score a todas las instancias.
+Para interpretar estos valores necesitamos un punto de comparación, así que evaluamos con la misma validación cruzada un clasificador que ignora los atributos y predice siempre la clase mayoritaria. Alcanza un accuracy de 0.7176, un AUPRC de 0.2824 que no es otra cosa que la proporción de positivos, y un AUCROC de 0.5000 porque asigna el mismo score a todas las instancias.
 
 Luego exploramos 6 combinaciones de altura máxima y criterio de corte, manteniendo validación cruzada con K = 5 y generando las combinaciones con \texttt{ParameterGrid} de scikit-learn. 
 Probamos alturas máximas de 3, 5 e infinita, con criterio de corte Gini y Entropía.
 Reutilizamos las mismas particiones para que los valores sean comparables, lo que se verifica en que la fila de altura 3 con Gini reproduce exactamente el resultado de la Tabla \ref{tab:resultados_permutaciones}. 
-Los resultados se muestran en la Tabla \ref{tab:accuracy_arboles}
+Los resultados se muestran en la Tabla \ref{tab:accuracy_arboles}.
 
 \begin{table}[H]
 \centering
@@ -123,23 +123,24 @@ Los resultados se muestran en la Tabla \ref{tab:accuracy_arboles}
 \toprule
 \textbf{Altura máxima} & \textbf{Criterio de corte} & \textbf{Accuracy (training)} & \textbf{Accuracy (validación)} \\
 \midrule
-3        & Gini     & 0.8453 & 0.6588 \\
-5        & Gini     & 0.9276 & 0.6800 \\
-Infinito & Gini     & 1.0000 & 0.6518 \\
-3        & Entropía & 0.7935 & 0.6871 \\
-5        & Entropía & 0.9059 & 0.6588 \\
-Infinito & Entropía & 1.0000 & 0.6706 \\
+3        & Gini     & 0.8224 & 0.6588 \\
+5        & Gini     & 0.9482 & 0.6447 \\
+Infinito & Gini     & 1.0000 & 0.6400 \\
+3        & Entropía & 0.8029 & 0.6541 \\
+5        & Entropía & 0.9253 & 0.6612 \\
+Infinito & Entropía & 1.0000 & 0.5953 \\
 \bottomrule
 \end{tabular}
 \caption{Accuracy promedio en entrenamiento y validacion de árboles de decisión, según altura máxima y criterio de corte, con la misma validación cruzada estratificada de 5 particiones sobre el conjunto de desarrollo.}
 \label{tab:accuracy_arboles}
 \end{table}
 
-De la Tabla \ref{tab:resultados_permutaciones} vemos que el modelo base, con altura máxima 3 y criterio Gini, logró un accuracy de validación de 0.6588, por debajo del 0.7176 del clasificador trivial. Su AUCROC de validación es 0.6399 en promedio y 0.6152 global, por encima del 0.5000 de referencia, y su AUPRC de 0.4069 mejora un poco el 0.2941 que ya da predecir siempre la clase mayoritaria. El modelo base entonces casi no captura señal, aunque la brecha con entrenamiento es amplia, 0.8453 contra 0.6588 en accuracy y 0.8438 contra 0.6399 en AUCROC.
+De la Tabla \ref{tab:resultados_permutaciones} vemos que el modelo base, con altura máxima 3 y criterio Gini, logró un accuracy de validación de 0.6588, por debajo del 0.7176 del clasificador trivial. Su AUCROC de validación es 0.5732 en promedio y 0.5610 global, por encima del 0.5000 de referencia, y su AUPRC de 0.3508 mejora un poco el 0.2824 que ya da predecir siempre la clase mayoritaria. El modelo base entonces casi no captura señal, aunque la brecha con entrenamiento es amplia, 0.8224 contra 0.6588 en accuracy y 0.8427 contra 0.5732 en AUCROC.
 
-En la Tabla \ref{tab:accuracy_arboles} se observa el comportamiento típico del overfitting. Al relajar la altura máxima el accuracy de entrenamiento sube hasta 1.0000, es decir que el árbol memoriza las 340 instancias de cada fold, mientras que el de validación no logra mejoras significativas. Con Gini el mejor resultado se da con altura 5 (0.6800) para luego caer a 0.6518 sin restricción, y con Entropía el mejor caso es el árbol de altura 3 (0.6871), empeorando en las configuraciones de mayor profundidad.
+En la Tabla \ref{tab:accuracy_arboles} se observa el comportamiento típico del overfitting. Al relajar la altura máxima el accuracy de entrenamiento sube hasta 1.0000, es decir que el árbol memoriza las 340 instancias de cada fold, mientras que el de validación no logra mejoras significativas. Con Gini el mejor resultado se da con altura 3 (0.6588) para luego caer a 0.6400 sin restricción, y con Entropía el mejor caso es el árbol de altura 5 (0.6612), empeorando en la configuración sin restricción.
 
-Ninguna de las 6 configuraciones supera el 0.7176 del clasificador trivial, y el rango completo de la columna de validación, que va de 0.6518 a 0.6871, es más angosto que la variación entre folds de una misma configuración, que en la Tabla \ref{tab:resultados_permutaciones} va de 0.5294 a 0.7294. Por eso no consideramos que ninguna combinación sea preferible a las demás. Tampoco el accuracy es la métrica más adecuada para este problema, porque con un 72\% de instancias negativas premia al modelo que ignora la clase minoritaria, que es justamente la que interesa detectar, y por eso de acá en adelante usamos AUCROC. En conjunto, las dos tablas muestran que un árbol de decisión no alcanza para estos 200 atributos, lo que motiva explorar otras familias de algoritmos.
+Ninguna de las 6 configuraciones supera el 0.7176 del clasificador trivial, y el rango completo de la columna de validación, que va de 0.5953 a 0.6612, es más angosto que la variación entre folds de una misma configuración, que en la Tabla \ref{tab:resultados_permutaciones} va de 0.6000 a 0.7412. Por eso no consideramos que ninguna combinación sea preferible a las demás. Tampoco el accuracy es la métrica más adecuada a este problema, porque con casi 71,8\% de instancias negativas premia al modelo que ignora la clase minoritaria, que es justamente la que interesa detectar, y por eso de acá en adelante usamos AUCROC. En conjunto, las dos tablas muestran que un árbol de decisión no alcanza para estos 200 atributos, lo que motiva explorar otras familias de algoritmos.
+
 
 \section{Comparación de algoritmos}
 En esta sección se evalúan modelos basados en árboles de decisión, KNN y SVM, explorando distintas combinaciones de hiperparámetros.
@@ -155,13 +156,12 @@ Como hiperparámetros se consideraron la profundidad máxima, la cantidad mínim
                      "max_features": ["sqrt", "log2", None]} 
 \end{lstlisting}
 
-
 Los mejores hiperparámetros encontrados fueron: 
 \texttt{'min\_samples\_split': 10, 
-'min\_samples\_leaf': 1, 
-'max\_features': None, 
+'min\_samples\_leaf': 15, 
+'max\_features': 'log2', 
 'max\_depth': 5, 
-'criterion': 'entropy'}, obteniendo un AUCROC score de 0.6695.
+'criterion': 'gini'}, obteniendo un AUCROC score de 0.6740.
 
 \subsection{KNN}
 Para KNN, es importante considerar el escalado de las variables. Al tener escalas muy distintas, aquellas con mayor rango numérico pueden llegar a dominar el cálculo de la distancia. Los hiperparámetros evaluados fueron:
@@ -178,7 +178,7 @@ Para KNN, es importante considerar el escalado de las variables. Al tener escala
                      "scaler": [StandardScaler(), None]}  
 \end{lstlisting}
 
-Mejores hiperparámetros encontrados para KNN: \texttt{'scaler': None, 'knn\_weights': 'distance', 'knn\_n\_neighbors': 21, 'knn\_metric': 'manhattan'}, alcanzando un AUCROC de 0.8756.
+Mejores hiperparámetros encontrados para KNN: \texttt{'scaler': None, 'knn\_\_weights': 'distance', 'knn\_\_n\_neighbors': 21, 'knn\_\_metric': 'manhattan'}, alcanzando un AUCROC de 0.8474.
 
 \subsection{SVM}
 Para SVM, al igual que en KNN, la escala de las características suele ser un factor crítico. Se exploraron los siguientes hiperparámetros:
@@ -202,7 +202,7 @@ Para \texttt{gamma} y \texttt{C} se suelen probar diferentes órdenes de magnitu
                      "scaler": [StandardScaler(), None]}]
 \end{lstlisting}
 
-Los mejores hiperparámetros encontrados para SVM fueron \texttt{'svm\_kernel': 'poly', 'svm\_gamma': 1, 'svm\_degree': 2, 'svm\_C': 1000, 'scaler': None}, con un AUCROC de 0.8521.
+Los mejores hiperparámetros encontrados para SVM fueron \texttt{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 1, 'svm\_\_degree': 2, 'svm\_\_C': 1000, 'scaler': None}, con un AUCROC de 0.8587.
 
 Se observa en la Tabla \ref{tab:svm_gridsearch} que las 5 mejores configuraciones obtienen exactamente el mismo AUCROC. Al no aplicar escalado, las variaciones evaluadas en \texttt{C} y \texttt{gamma} no llegaron a alterar la frontera de decisión ni el rendimiento del modelo en el conjunto de validación.
 
@@ -213,16 +213,16 @@ Se observa en la Tabla \ref{tab:svm_gridsearch} que las 5 mejores configuracione
 \toprule
 \textbf{Índice} & \textbf{Params} & \textbf{Mean Test Score} & \textbf{Std Test Score} \\
 \midrule
-9  & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.0001, 'svm\_\_degree': 2, 'svm\_\_C': 1000, 'scaler': None\}} 
-   & 0.852133 & 0.054438 \\
-25 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.01, 'svm\_\_degree': 2, 'svm\_\_C': 100, 'scaler': None\}} 
-   & 0.852133 & 0.054438 \\
+29 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.01, 'svm\_\_degree': 2, 'svm\_\_C': 1, 'scaler': None\}} 
+   & 0.858743 & 0.055193 \\
 2  & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 1, 'svm\_\_degree': 2, 'svm\_\_C': 1000, 'scaler': None\}} 
-   & 0.852133 & 0.054438 \\
+   & 0.858743 & 0.055193 \\
+25 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.01, 'svm\_\_degree': 2, 'svm\_\_C': 100, 'scaler': None\}} 
+   & 0.858743 & 0.055193 \\
 23 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 1, 'svm\_\_degree': 2, 'svm\_\_C': 100, 'scaler': None\}} 
-   & 0.852133 & 0.054438 \\
+   & 0.858743 & 0.055193 \\
 22 & \texttt{\{'svm\_\_kernel': 'poly', 'svm\_\_gamma': 0.001, 'svm\_\_degree': 2, 'svm\_\_C': 1000, 'scaler': None\}} 
-   & 0.852133 & 0.054438 \\
+   & 0.858743 & 0.055193 \\
 \bottomrule
 \end{tabular}%
 }
@@ -242,31 +242,30 @@ Por último, añadimos a la comparación LDA y Naive Bayes.
 \toprule
 \textbf{Fold} & \textbf{LDA} & \textbf{Naive Bayes} \\
 \midrule
-1 & 0.7833 & 0.9053 \\
-2 & 0.7653 & 0.7260 \\
-3 & 0.8000 & 0.8013 \\
-4 & 0.7267 & 0.7473 \\
-5 & 0.7173 & 0.8327 \\
+1 & 0.7131 & 0.7425 \\
+2 & 0.6919 & 0.7582 \\
+3 & 0.6291 & 0.7589 \\
+4 & 0.6086 & 0.6926 \\
+5 & 0.5608 & 0.7357 \\
 \midrule
-\textbf{Promedio} & \textbf{0.7585} & \textbf{0.8025} \\
+\textbf{Promedio} & \textbf{0.6407} & \textbf{0.7376} \\
 \bottomrule
 \end{tabular}
 \caption{AUCROC por fold y promedio para LDA y Naive Bayes.}
 \label{tab:aucroc_lda_nb}
 \end{table}
 
-Se observa que el AUCROC promedio de LDA resulta ser el más bajo de los modelos evaluados, con un valor de 0.7585. Esto puede deberse a que se está estimando una matriz de covarianza de $200 \times 200$ (debido a las 200 variables utilizadas en el entrenamiento) con pocas instancias por fold, lo que resulta en una estimación ruidosa y casi singular. Para mitigar este problema en el futuro, se podría utilizar el hiperparámetro de \texttt{shrinkage}, el cual regulariza la matriz de covarianza.
+Se observa que el AUCROC promedio de LDA resulta ser el más bajo de los modelos evaluados, con un valor de 0.6407. Esto puede deberse a que se está estimando una matriz de covarianza de $200 \times 200$ (debido a las 200 variables utilizadas en el entrenamiento) con pocas instancias por fold, lo que resulta en una estimación ruidosa y casi singular. Para mitigar este problema en el futuro, se podría utilizar el hiperparámetro de \texttt{shrinkage}, el cual regulariza la matriz de covarianza.
 
-Por otro lado, Naive Bayes, incluso sin haber realizado una búsqueda de hiperparámetros, alcanzó un AUCROC promedio de 0.8025, un desempeño muy competitivo que se acerca a los resultados obtenidos por SVM y KNN. Al asumir independencia entre las variables, este modelo solo estima la media y la varianza para cada gen individualmente, por lo que dichas estimaciones resultan más robustas incluso contando con pocos datos. Uno de los hiperparámetros que se podría ajustar para optimizarlo es \texttt{var\_smoothing}, el cual añade a todas las estimaciones una fracción de la mayor varianza observada en el conjunto de datos. Esto funciona como una regularización y evita que, si una variable presenta una varianza cercana a cero en el entrenamiento, un valor nuevo en la fase de prueba reciba una probabilidad nula y termine dominando el producto de probabilidades.
+Por otro lado, Naive Bayes, incluso sin haber realizado una búsqueda de hiperparámetros, alcanzó un AUCROC promedio de 0.7376, un desempeño muy competitivo que se acerca a los resultados obtenidos por SVM y KNN. Al asumir independencia entre las variables, este modelo solo estima la media y la varianza para cada gen individualmente, por lo que dichas estimaciones resultan más robustas incluso contando con pocos datos. Uno de los hiperparámetros que se podría ajustar para optimizarlo es \texttt{var\_smoothing}, el cual añade a todas las estimaciones una fracción de la mayor varianza observada en el conjunto de datos. Esto funciona como una regularización y evita que, si una variable presenta una varianza cercana a cero en el entrenamiento, un valor nuevo en la fase de prueba reciba una probabilidad nula y termine dominando el producto de probabilidades.
 
 \section{Evaluación de performance}
-
-El mejor modelo obtenido durante el desarrollo fue el basado en el algoritmo K-Nearest Neighbors (KNN) con los siguientes hiperparámetros: 
-\texttt{\{'scaler': None, 'weights': 'distance', 'n\_neighbors': 21, 'metric': 'manhattan'\}}.
+El mejor modelo obtenido durante el desarrollo fue el basado en Máquinas de Vectores de Soporte (SVM) con los siguientes hiperparámetros: 
+\texttt{\{'scaler': None, 'svm\_\_kernel': 'poly', 'svm\_\_degree': 2, 'svm\_\_C': 1000, 'svm\_\_gamma': 1\}}.
 
 Para aproximar el desempeño de este modelo sobre el conjunto de control (en posesión de los docentes), se entrenó el modelo final utilizando la totalidad de las instancias del conjunto de desarrollo y, posteriormente, se evaluó sobre el conjunto de evaluación que fue separado al inicio del trabajo. De esta forma, se logró una estimación del desempeño final del modelo ante datos no vistos previamente, evitando sobreestimar su capacidad predictiva.
 
-El valor de AUCROC estimado por el modelo final sobre este conjunto de evaluación fue de \textbf{0.9117}. Las probabilidades predichas para la clase positiva, correspondientes a cada instancia del conjunto de control, se encuentran adjuntas a este trabajo en el archivo \texttt{11\_y\_pred\_control\_9117.csv}. Dicho archivo contiene una única columna denominada \texttt{output}, tal como fue requerido en la consigna.
+El valor de AUCROC estimado por el modelo final sobre este conjunto de evaluación fue de \textbf{0.9189}. Las probabilidades predichas para la clase positiva, correspondientes a cada instancia del conjunto de control, se encuentran adjuntas a este trabajo en el archivo \texttt{11\_y\_pred\_control\_9189.csv}. Dicho archivo contiene una única columna denominada \texttt{output}, tal como fue requerido en la consigna.
 
 \section{Conclusiones}
 
