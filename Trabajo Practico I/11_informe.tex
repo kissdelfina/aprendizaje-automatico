@@ -41,7 +41,8 @@
 
 \begin{document}
 
-\titulo{Trabajo Práctico}
+\titulo{Clasificación binaria de lesiones pre-tumorales a partir de perfiles de expresión génica}
+\subtitulo{Trabajo Práctico}
 
 \fecha{\today}
 
@@ -61,7 +62,7 @@ En este trabajo práctico evaluamos distintos modelos de aprendizaje automático
 Con el fin de comparar su eficacia en la clasificación, probamos diferentes algoritmos con distintas configuraciones de hiperparámetros: árboles de decisión, K vecinos más cercanos (KNN), support vector machines (SVM), análisis discriminante lineal (LDA) y Naive Bayes. La implementación se realizó en Python siguiendo los lineamientos de la cátedra.\footnote{El notebook con el código completo se puede consultar \href{https://github.com/kissdelfina/aprendizaje-automatico/blob/main/Trabajo\%20Practico\%20I/TP_Aprendizaje_Automatico_I.ipynb}{aquí}. En este informe incluimos solo el código necesario para ilustrar la elección de hiperparámetros de los modelos.}
 
 \section{Separación de datos}
-Lo primero que hicimos fue dividir el dataset en dos particiones: un conjunto de desarrollo, sobre el cual entrenamos y seleccionamos los modelos, y un conjunto de control para evaluar al final del trabajo la configuración elegida. Siguiendo el estándar habitual, destinamos el 15\% de las instancias al conjunto de control. A la hora de hacer la división, tuvimos en cuenta que cada partición debe ser representativa del dataset. Es decir, la proporción de etiquetas original tiene que mantenerse en cada subconjunto, el subconjunto de control no debería presentar propiedades ausentes en el de desarrollo, ni a la inversa. Del total, 359 instancias (71,8\%) corresponden a la etiqueta 0 (mal pronóstico) y 141 (28,2\%) a la etiqueta 1 (buen pronóstico). Para preservar las proporciones aplicamos muestreo estratificado: agrupamos las instancias por etiqueta y extrajimos una muestra aleatoria del 15\% dentro de cada grupo mediante los métodos \texttt{groupby} y \texttt{sample} de Pandas. El resultado dio $0{,}15 \cdot 359 \approx 54$ instancias de etiqueta 0 y $0{,}15 \cdot 141 \approx 21$ de etiqueta 1, lo que deja un conjunto de control de 75 instancias y un conjunto de desarrollo de 425. Con la separación establecida, construimos los modelos.
+Lo primero que hicimos fue dividir el dataset en dos particiones: un conjunto de desarrollo, sobre el cual entrenamos y seleccionamos los modelos, y un conjunto de evaluación (\textit{held-out}) para estimar al final del trabajo el desempeño de la configuración elegida sobre los datos de control. Siguiendo el estándar habitual, destinamos el 15\% de las instancias al conjunto de evaluación. A la hora de hacer la división, tuvimos en cuenta que cada partición debe ser representativa del dataset. Es decir, la proporción de etiquetas original tiene que mantenerse en cada subconjunto, y el subconjunto de evaluación no debería presentar propiedades ausentes en el de desarrollo, ni a la inversa. Del total, 359 instancias (71,8\%) corresponden a la etiqueta 0 (mal pronóstico) y 141 (28,2\%) a la etiqueta 1 (buen pronóstico). Para preservar las proporciones aplicamos muestreo estratificado: agrupamos las instancias por etiqueta y extrajimos una muestra aleatoria del 15\% dentro de cada grupo mediante los métodos \texttt{groupby} y \texttt{sample} de Pandas. El resultado dio $0{,}15 \times 359 \approx 54$ instancias de etiqueta 0 y $0{,}15 \times 141 \approx 21$ de etiqueta 1, lo que deja un conjunto de evaluación de 75 instancias y un conjunto de desarrollo de 425. Con la separación establecida, construimos los modelos.
 
 \section{Construcción de árboles de decisión}
 Buscamos construir y evaluar modelos de árboles de decisión, obteniendo una estimación realista de su performance. 
@@ -97,7 +98,7 @@ Los resultados se pueden observar en la Tabla \ref{tab:resultados_permutaciones}
 \bottomrule
 \end{tabular}%
 }
-\caption{Métricas de un árbol de altura máxima 3 con criterio Gini, por fold de la validación cruzada estratificada de 5 particiones sobre el conjunto de desarrollo. Global se calcula sobre las predicciones acumuladas de los 5 folds de validación}
+\caption{Métricas de un árbol de altura máxima 3 con criterio Gini, por fold de la validación cruzada estratificada de 5 particiones sobre el conjunto de desarrollo. Global se calcula sobre las predicciones acumuladas de los 5 folds de validación.}
 \label{tab:resultados_permutaciones}
 \end{table}
 
@@ -127,14 +128,15 @@ Infinito & Entropía & 1,0000 & 0,5953 \\
 \end{table}
 
 
-
 En la Tabla \ref{tab:accuracy_arboles} se observa el comportamiento típico del overfitting. Al relajar la altura máxima, la accuracy de entrenamiento sube hasta 1,0000, es decir que el árbol memoriza las 340 instancias de cada fold, mientras que el de validación no logra mejoras significativas. Con Gini el mejor resultado se da con altura 3 (0,6588) para luego caer a 0,6400 sin restricción, y con Entropía el mejor caso es el árbol de altura 5 (0,6612), empeorando en la configuración sin restricción.
+
+De la exploración anterior se pueden extraer dos conclusiones principales. Primero, el criterio de corte tiene un impacto menor que la altura máxima: para una misma profundidad, las diferencias en accuracy de validación no superan los 2 puntos porcentuales. Segundo, aumentar la profundidad mejora el ajuste sobre entrenamiento pero no sobre validación, lo que es una señal clara de sobreajuste: el árbol sin restricción de altura memoriza el conjunto de entrenamiento pero su validación cae a 0,6400 con Gini y 0,5953 con Entropía. 
 
 Ninguna de las 6 configuraciones supera el 0,7176 del clasificador trivial, y el rango completo de la columna de validación, que va de 0,5953 a 0,6612, es más angosto que la variación entre folds de una misma configuración, que en la Tabla \ref{tab:resultados_permutaciones} va de 0,6000 a 0,7412. Por eso no consideramos que ninguna combinación sea preferible a las demás. Tampoco la accuracy es la métrica más adecuada a este problema, porque con casi 71,8\% de instancias negativas premia al modelo que ignora la clase minoritaria y por eso de acá en adelante usamos AUCROC. En conjunto, las dos tablas muestran que un árbol de decisión no alcanza para estos 200 atributos, lo que motiva explorar otras familias de algoritmos.
 
 
 \section{Comparación de algoritmos}
-En esta sección evaluamos y comparamos modelos basados en árboles de decisión, KNN y SVM, explorando distintas combinaciones de hiperparámetros en cada caso, utilizando \texttt{RandomizedSearchCV} con 50 iteraciones en cada búsqueda. Luego, comparamos con LDA y Naive Bayes con sus hiperparámetros por defecto.
+En esta sección evaluamos y comparamos modelos basados en árboles de decisión, KNN y SVM, explorando distintas combinaciones de hiperparámetros en cada caso mediante \texttt{RandomizedSearchCV} con 50 iteraciones y seleccionando las mejores configuraciones según el AUCROC promedio en validación cruzada estratificada de 5 folds sobre el conjunto de desarrollo.
 
 \subsection{Árboles de decisión}
 Como hiperparámetros consideramos la profundidad máxima, la cantidad mínima de instancias necesarias para dividir un nodo, la cantidad mínima de instancias por hoja, el criterio de corte (Gini o Entropía) y la cantidad máxima de atributos a evaluar (probando la raíz cuadrada y el logaritmo del total de variables):
@@ -186,13 +188,13 @@ Para SVM, al igual que en KNN, la escala de las características suele ser un fa
 Para \texttt{gamma} y \texttt{C} se suelen probar diferentes órdenes de magnitud. Para \texttt{degree}, probar grados mayores a 3 puede generar un espacio de variables enorme y sobreajustar fácilmente con pocas instancias.
 
 \begin{lstlisting}
-   parametros_svm = [{"svm__kernel": ["linear"], "svm__C": [0,01, 0,1, 1, 10, 100, 1000], 
+   parametros_svm = [{"svm__kernel": ["linear"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], 
                      "scaler": [StandardScaler(), None]},
-                     {"svm__kernel": ["rbf"], "svm__C": [0,01, 0,1, 1, 10, 100, 1000], 
-                     "svm__gamma": ["scale", 0,0001, 0,001, 0,01, 0,1, 1], 
+                     {"svm__kernel": ["rbf"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000], 
+                     "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], 
                      "scaler": [StandardScaler(), None]},
-                     {"svm__kernel": ["poly"], "svm__C": [0,01, 0,1, 1, 10, 100, 1000],
-                     "svm__degree": [2, 3], "svm__gamma": ["scale", 0,0001, 0,001, 0,01, 0,1, 1], 
+                     {"svm__kernel": ["poly"], "svm__C": [0.01, 0.1, 1, 10, 100, 1000],
+                     "svm__degree": [2, 3], "svm__gamma": ["scale", 0.0001, 0.001, 0.01, 0.1, 1], 
                      "scaler": [StandardScaler(), None]}]
 \end{lstlisting}
 
@@ -214,7 +216,7 @@ Se observa en la Tabla \ref{tab:svm_gridsearch} que las 5 mejores configuracione
 \textbf{Kernel}             & Polinómico & Polinómico & Polinómico & Polinómico & Polinómico \\
 \textbf{Grado (degree)}     & 2          & 2          & 2          & 2          & 2 \\
 \textbf{Gamma ($\gamma$)}   & 1          & 0,0001     & 1          & 0,01       & 0,01 \\
-\textbf{C}                  & 1000       & 1000       & 100        & 1          & 100 \\
+\textbf{C}                  & 1000       & 1000       & 100        & 100          & 1 \\
 \midrule
 \textbf{AUCROC (Validación)}    & 0,8587 & 0,8587 & 0,8587 & 0,8587 & 0,8587 \\
 \textbf{Desvío entre folds}     & 0,0552 & 0,0552 & 0,0552 & 0,0552 & 0,0552 \\
@@ -253,7 +255,7 @@ Por último, añadimos a la comparación LDA y Naive Bayes (Tabla \ref{tab:aucro
 Observamos que el AUCROC promedio de LDA resulta ser el más bajo de los modelos evaluados, con un valor de 0,6407. Esto puede deberse a que se está estimando una matriz de covarianza de $200 \times 200$ (debido a las 200 variables utilizadas en el entrenamiento) con pocas instancias por fold, lo que resulta en una estimación ruidosa y casi singular. Para mitigar este problema en el futuro, se podría utilizar el hiperparámetro de \texttt{shrinkage}, el cual regulariza la matriz de covarianza.
 
 Por otro lado, Naive Bayes, incluso sin que hayamos realizado una búsqueda de hiperparámetros, alcanzó un AUCROC promedio de 0,7376, un desempeño muy competitivo que se acerca a los resultados obtenidos por SVM y KNN. Al asumir independencia entre las variables, este modelo solo estima la media y la varianza para cada gen individualmente, por lo que dichas estimaciones resultan más robustas incluso contando con pocos datos. Uno de los hiperparámetros que se podría ajustar para optimizarlo es \texttt{var\_smoothing}, el cual añade a todas las estimaciones una fracción de la mayor varianza observada en el conjunto de datos. Esto funciona como una regularización y evita que si una variable presenta una varianza cercana a cero en el entrenamiento, un valor nuevo en la fase de prueba reciba una probabilidad nula y termine dominando el producto de probabilidades.
-\\
+
 Una comparativa que resume las mejores configuraciones para los cinco algoritmos probados se puede ver en la Tabla \ref{tab:comparacion_algoritmos_resumen}.
 
 \begin{table}[H]
@@ -279,25 +281,27 @@ Una comparativa que resume las mejores configuraciones para los cinco algoritmos
 \end{table}
 
 \section{Evaluación de performance}
-El mejor modelo que encontramos en base a nuestros datos de desarrollo es SVM sin escalar, con kernel polinómico de grado dos, gamma de 1 y regularización C de 1000. El SVM funciona bien con alta dimensionalidad, ya que no depende directamente de la cantidad de dimensiones (200) sino de la cantidad de datos en o cerca de los márgenes. Asimismo, el uso de un kernel no lineal permite capturar interacciones complejas y no lineales entre los niveles de expresión de distintos genes, superando las limitaciones de los modelos lineales tradicionales.
+El mejor modelo que encontramos en base a nuestros datos de desarrollo, medido según el AUCROC promedio de validación cruzada (0,8587) frente a las otras cuatro familias de algoritmos evaluadas, es el SVM sin escalar, con kernel polinómico de grado dos, gamma de 1 y regularización C de 1000. El SVM funciona bien con alta dimensionalidad, ya que no depende directamente de la cantidad de dimensiones (200) sino de la cantidad de datos en o cerca de los márgenes. Asimismo, el uso de un kernel no lineal permite capturar interacciones complejas y no lineales entre los niveles de expresión de distintos genes, superando las limitaciones de los modelos lineales tradicionales.
+
+En particular, el kernel polinómico de grado 2 permite modelar directamente interacciones del tipo $x_i \cdot x_j$ entre pares de genes, lo cual explica su ventaja frente al resto de las familias evaluadas: LDA y el SVM lineal por construcción solo capturan combinaciones lineales, mientras que Naive Bayes puede modelar términos cuadráticos individuales ($x_i^2$) pero, al asumir independencia entre atributos, no logra capturar interacciones cruzadas entre variables. Por su parte, los árboles de decisión realizan cortes sobre un único atributo por vez, por lo que necesitarían demasiadas particiones sucesivas para aproximar una frontera sobre $x_i \cdot x_j$. Finalmente, KNN, al no ser paramétrico, sí es capaz de detectar estas relaciones locales, aunque su desempeño se ve afectado por los atributos más ruidosos y sin poder predictivo al calcular distancias sobre las 200 variables.
 
 Para aproximar el desempeño de este modelo sobre el conjunto de control (en posesión de los docentes), entrenamos el modelo final utilizando la totalidad de las instancias del conjunto de desarrollo y, posteriormente, evaluamos sobre el conjunto de evaluación que fue separado al inicio del trabajo. De esta forma, logramos una estimación del desempeño final del modelo ante datos no vistos previamente, evitando sobreestimar su capacidad predictiva.
 
 El valor de AUCROC estimado por el modelo final sobre este conjunto de evaluación fue de \textbf{0,9189}. Las probabilidades predichas para la clase positiva, correspondientes a cada instancia del conjunto de control, se encuentran adjuntas a este trabajo en el archivo \texttt{11\_y\_pred\_control\_9189.csv}.
 
 \section{Discusión}
-Es importante notar que el problema que abordamos concierne la salud humana. Los modelos que intentamos encontrar buscan predecir lo mejor posible si una célula tendrá pronóstico de generar un tumor maligno o no. En este dataset, los casos negativos son los de mayor importancia, ya que implican que la persona a la que se le tomó la muestra debe realizarse estudios que confirmen el mal pronóstico o eventualmente iniciar un tratamiento. Así, aún sabiendo que es imposible generar un modelo perfecto dada la gran variabilidad que hay dentro de las muestras biológicas, podríamos tener en cuenta que cometer un error al clasificar una célula con mal pronóstico real como de buen pronóstico podría tener consecuencias mucho más graves que si el error se comete a la inversa. 
+Es importante notar que el problema que abordamos concierne a la salud humana. Los modelos que intentamos encontrar buscan predecir lo mejor posible si una célula tendrá pronóstico de generar un tumor maligno o no. En este dataset, los casos negativos son los de mayor importancia, ya que implican que la persona a la que se le tomó la muestra debe realizarse estudios que confirmen el mal pronóstico o eventualmente iniciar un tratamiento. Así, aún sabiendo que es imposible generar un modelo perfecto dada la gran variabilidad que hay dentro de las muestras biológicas, podríamos tener en cuenta que cometer un error al clasificar una célula con mal pronóstico real como de buen pronóstico podría tener consecuencias mucho más graves que si el error se comete a la inversa. 
 
-Por otro lado, nos resultó interesante ver qué sucede si en lugar de usar todos los atributos, nos quedáramos con aquellos que parecen tener más poder predictivo, 
-especialmente aquellos cuyo rango es mayor puesto que el hecho de que las mejores configuraciones fueran sin escalar nos indica que estos pueden ser los más 
-informativos. En nuestro código hacemos una pequeña exploración que se muestra en la sección de Apéndice, en el cual mostramos que las escalas de los features 
-son muy diferentes, y efectivamente al usar sólo aquellos con mayor varianza, terminamos con una mejor performance del SVM con kernel polinómico de grado 2. 
-Además, notamos que las interacciones más importantes eran del tipo $x_i . x_j$, puesto que al cambiar los tipos de polinomios del SVM, nos dimos cuenta que 
-la performance se disparaba justamente cuando incluíamos estos términos, mientras que los términos sólo cuadrados $x_i^2$ no aportaban una mejora.
+Por otro lado, exploramos qué sucede al restringir el modelo a los atributos con mayor varianza, en lugar de usar las 200 variables. Esta decisión estuvo motivada por el hecho de que las mejores configuraciones de KNN y SVM no utilizaron escalado, lo que sugiere que los atributos con mayor rango numérico son también los más informativos. Al entrenar el SVM polinómico de grado 2 únicamente sobre el subconjunto de 55 variables de mayor varianza, obtuvimos una mejora en el AUCROC promedio de validación cruzada (pasando de 0,8587 a 0,9441) respecto al mismo modelo entrenado con las 200 variables. Además, al comparar distintos tipos de kernels bajo esta misma métrica, notamos que el AUCROC de validación se disparaba a 0,9421 al incluir términos cruzados $x_i \cdot x_j$ respecto al kernel lineal (0,7190), mientras que los términos puramente cuadráticos $x_i^2$ por sí solos (0,6026) empeoraban el desempeño frente al caso lineal. Esto refuerza la hipótesis de que las interacciones entre pares de genes son el principal mecanismo predictivo en este dataset, y sugiere que una selección de features más sistemática podría mejorar aún más el desempeño y la interpretabilidad del modelo.
 
-Finalmente, cabe aclarar que la diferencia entre la estimación final de AUCROC = 0.9189 sobre el dataset de control y AUCROC = 0.8587 sobre los datos de desarrollo puede deberse probablemente 
-a que en el primer conjunto sólo tenemos 75 instancias mientras que en el segundo teníamos 425. Con esta pequeña cantidad de datos, el desvío estándar de la 
-estimación es relativamente grande, lo cual ya veíamos con un 0,0552 de desvío de AUCROC entre los folds.
+Finalmente, cabe aclarar que el AUCROC obtenido sobre el conjunto de evaluación \textit{held-out} fue de 0,9189, notablemente superior al 0,8587 de validación cruzada sobre los datos de desarrollo. Esta diferencia llama la atención porque va en la dirección opuesta a la esperada: lo habitual es que el desempeño sobre datos no vistos sea igual o inferior al estimado por validación cruzada, no superior. Una explicación posible es el tamaño reducido del \textit{held-out} (75 instancias), que genera una estimación con alta varianza: con tan pocos datos, el desvío estándar del AUCROC puede ser del orden de 0,05 a 0,10, por lo que un valor de 0,9189 es perfectamente compatible con el 0,8587 de validación cruzada dentro del margen de error. Esto ya se intuía al observar un desvío de 0,0552 entre los folds sobre 425 instancias; con un conjunto cinco veces más chico, esa varianza es considerablemente mayor. En consecuencia, no interpretamos el 0,9189 como evidencia de que el modelo generaliza mejor de lo estimado, sino como una fluctuación estadística esperable dado el tamaño del conjunto de evaluación.
+
+\section{Conclusiones}
+A lo largo de este trabajo evaluamos cinco algoritmos de clasificación sobre un dataset de expresión génica de 200 variables y 500 instancias, con el objetivo de predecir el pronóstico de lesiones pretumorales. La principal dificultad encontrada fue el desbalance de clases (71,8\% negativas), que hacía que la accuracy no fuera una métrica representativa del desempeño real de los modelos frente a un clasificador trivial que predice siempre la clase mayoritaria, por lo que centramos la selección y comparación de modelos en el AUCROC promedio de validación cruzada.
+
+Los árboles de decisión, incluso con búsqueda de hiperparámetros, no lograron superar el clasificador trivial en accuracy y mostraron un AUCROC de validación de apenas 0,6740, lo que sugiere que la frontera de decisión de este problema no es fácilmente aproximable con cortes univariados sucesivos sobre 200 atributos. LDA tampoco se adaptó bien al problema, probablemente por la dificultad de estimar una matriz de covarianza de $200\times200$ con pocas instancias por fold. En el otro extremo, el SVM con kernel polinómico de grado 2 alcanzó el mejor AUCROC de validación de 0,8587, lo que sugiere que la frontera de decisión está gobernada principalmente por interacciones de pares de genes. Naive Bayes, con un AUCROC de 0,7376 sin ajuste de hiperparámetros, refuerza la idea de que la información predictiva está distribuida de manera relativamente independiente entre las variables.
+
+Un aspecto que decidimos explorar fue la selección de atributos por varianza: al restringir el entrenamiento a las 55 variables de mayor rango, el AUCROC promedio en validación cruzada del SVM mejoró de 0,8587 a 0,9441 respecto al modelo entrenado con los 200 atributos originales, lo que es coherente con el hallazgo de que las mejores configuraciones sin filtrar no utilizaron escalado. Podría ser valioso explorar métodos de selección de features más sistemáticos y ajustar los hiperparámetros de Naive Bayes y LDA, que en este trabajo se evaluaron solo con sus valores por defecto.
 
 \section{Bibliografía}
 A continuación dejamos la documentación consultada de sklearn:
