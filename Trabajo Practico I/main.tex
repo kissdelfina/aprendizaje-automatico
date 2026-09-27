@@ -291,7 +291,9 @@ Es importante notar que el problema que abordamos concierne la salud humana. Los
 Por otro lado, nos resultó interesante ver qué sucede si en lugar de usar todos los atributos, nos quedáramos con aquellos que parecen tener más poder predictivo, 
 especialmente aquellos cuyo rango es mayor puesto que el hecho de que las mejores configuraciones fueran sin escalar nos indica que estos pueden ser los más 
 informativos. En nuestro código hacemos una pequeña exploración que se muestra en la sección de Apéndice, en el cual mostramos que las escalas de los features 
-son muy diferentes, y efectivamente al usar sólo aquellos con mayor varianza, terminamos con una mejor performance del SVM con kernel polinómico de grado 2.
+son muy diferentes, y efectivamente al usar sólo aquellos con mayor varianza, terminamos con una mejor performance del SVM con kernel polinómico de grado 2. 
+Además, notamos que las interacciones más importantes eran del tipo $x_i . x_j$, puesto que al cambiar los tipos de polinomios del SVM, nos dimos cuenta que 
+la performance se disparaba justamente cuando incluíamos estos términos, mientras que los términos sólo cuadrados $x_i^2$ no aportaban una mejora.
 
 Finalmente, cabe aclarar que la diferencia entre la estimación final de AUCROC = 0.9189 sobre el dataset de control y AUCROC = 0.8587 sobre los datos de desarrollo puede deberse probablemente 
 a que en el primer conjunto sólo tenemos 75 instancias mientras que en el segundo teníamos 425. Con esta pequeña cantidad de datos, el desvío estándar de la 
