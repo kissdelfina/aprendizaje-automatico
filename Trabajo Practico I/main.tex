@@ -134,7 +134,7 @@ Ninguna de las 6 configuraciones supera el 0,7176 del clasificador trivial, y el
 
 
 \section{Comparación de algoritmos}
-En esta sección evaluamos y comparamos modelos basados en árboles de decisión, KNN y SVM, explorando distintas combinaciones de hiperparámetros en cada caso. Luego, comparamos con LDA y Naive Bayes con sus hiperparámetros por defecto.
+En esta sección evaluamos y comparamos modelos basados en árboles de decisión, KNN y SVM, explorando distintas combinaciones de hiperparámetros en cada caso, utilizando \texttt{RandomizedSearchCV} con 50 iteraciones en cada búsqueda. Luego, comparamos con LDA y Naive Bayes con sus hiperparámetros por defecto.
 
 \subsection{Árboles de decisión}
 Como hiperparámetros consideramos la profundidad máxima, la cantidad mínima de instancias necesarias para dividir un nodo, la cantidad mínima de instancias por hoja, el criterio de corte (Gini o Entropía) y la cantidad máxima de atributos a evaluar (probando la raíz cuadrada y el logaritmo del total de variables):
@@ -206,17 +206,18 @@ Se observa en la Tabla \ref{tab:svm_gridsearch} que las 5 mejores configuracione
 \setlength{\tabcolsep}{8pt} % Espaciado cómodo entre columnas
 \renewcommand{\arraystretch}{1.2} % Mejora el espacio vertical entre filas
 
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Hiperparámetro / Métrica} & \textbf{Configuración 1} & \textbf{Configuración 2} & \textbf{Configuración 3} & \textbf{Configuración 4} \\
+\textbf{Hiperparámetro / Métrica} & \textbf{Config. 1} & \textbf{Config. 2} & \textbf{Config. 3} & \textbf{Config. 4} & \textbf{Config. 5} \\
 \midrule
-\textbf{Escalador (Scaler)} & StandardScaler & RobustScaler & StandardScaler & MinMaxScaler \\
-\textbf{Kernel}             & RBF            & RBF          & Lineal        & Polinomial \\
-\textbf{Gamma ($\gamma$)}   & Scale          & Auto         & N/A           & Scale \\
-\textbf{C}                  & 1,0            & 10,0         & 0,1           & 1,0 \\
+\textbf{Escalador (Scaler)} & None       & None       & None       & None       & None \\
+\textbf{Kernel}             & Polinómico & Polinómico & Polinómico & Polinómico & Polinómico \\
+\textbf{Grado (degree)}     & 2          & 2          & 2          & 2          & 2 \\
+\textbf{Gamma ($\gamma$)}   & 1          & 0,0001     & 1          & 0,01       & 0,01 \\
+\textbf{C}                  & 1000       & 1000       & 100        & 1          & 100 \\
 \midrule
-\textbf{AUCROC (Entrenamiento)} & 0,8924     & 0,9510       & 0,8120        & 0,8745 \\
-\textbf{AUCROC (Validación)}   & 0,7412 & 0,6985     & 0,7050        & 0,6830 \\
+\textbf{AUCROC (Validación)}    & 0,8587 & 0,8587 & 0,8587 & 0,8587 & 0,8587 \\
+\textbf{Desvío entre folds}     & 0,0552 & 0,0552 & 0,0552 & 0,0552 & 0,0552 \\
 \bottomrule
 \end{tabular}
 
@@ -285,10 +286,28 @@ Para aproximar el desempeño de este modelo sobre el conjunto de control (en pos
 El valor de AUCROC estimado por el modelo final sobre este conjunto de evaluación fue de \textbf{0,9189}. Las probabilidades predichas para la clase positiva, correspondientes a cada instancia del conjunto de control, se encuentran adjuntas a este trabajo en el archivo \texttt{11\_y\_pred\_control\_9189.csv}.
 
 \section{Discusión}
-Es importante notar que el problema que abordamos tiene que ver con la salud humana. Los modelos que intentamos encontrar buscan predecir lo mejor posible si una célula tendrá pronóstico de generar un tumor maligno o no. En este dataset, los casos negativos son los de mayor importancia, ya que implican que la persona a la que se le tomó la muestra debe realizarse estudios que confirmen el mal pronóstico o eventualmente iniciar un tratamiento. Así, aun sabiendo que es imposible generar un modelo perfecto dada la gran variabilidad que hay dentro de las muestras biológicas, podríamos tener en cuenta que cometer un error al clasificar una célula con mal pronóstico real como de buen pronóstico podría tener consecuencias mucho más graves que si el error se comete a la inversa. 
+Es importante notar que el problema que abordamos concierne la salud humana. Los modelos que intentamos encontrar buscan predecir lo mejor posible si una célula tendrá pronóstico de generar un tumor maligno o no. En este dataset, los casos negativos son los de mayor importancia, ya que implican que la persona a la que se le tomó la muestra debe realizarse estudios que confirmen el mal pronóstico o eventualmente iniciar un tratamiento. Así, aún sabiendo que es imposible generar un modelo perfecto dada la gran variabilidad que hay dentro de las muestras biológicas, podríamos tener en cuenta que cometer un error al clasificar una célula con mal pronóstico real como de buen pronóstico podría tener consecuencias mucho más graves que si el error se comete a la inversa. 
 
-Finalmente, sería interesante ver qué sucede si en vez de usar todos los atributos, nos quedáramos con una parte y si tomáramos en cuenta interacción entre ellos. En nuestro código hacemos una pequeña exploración que se muestra en la sección de Apéndice.
+Por otro lado, nos resultó interesante ver qué sucede si en lugar de usar todos los atributos, nos quedáramos con aquellos que parecen tener más poder predictivo, 
+especialmente aquellos cuyo rango es mayor puesto que el hecho de que las mejores configuraciones fueran sin escalar nos indica que estos pueden ser los más 
+informativos. En nuestro código hacemos una pequeña exploración que se muestra en la sección de Apéndice, en el cual mostramos que las escalas de los features 
+son muy diferentes, y efectivamente al usar sólo aquellos con mayor varianza, terminamos con una mejor performance del SVM con kernel polinómico de grado 2.
 
-\section{Bibliografía consultada}
+Finalmente, cabe aclarar que la diferencia entre la estimación final de AUCROC = 0.9189 sobre el dataset de control y AUCROC = 0.8587 sobre los datos de desarrollo puede deberse probablemente 
+a que en el primer conjunto sólo tenemos 75 instancias mientras que en el segundo teníamos 425. Con esta pequeña cantidad de datos, el desvío estándar de la 
+estimación es relativamente grande, lo cual ya veíamos con un 0,0552 de desvío de AUCROC entre los folds.
+
+\section{Bibliografía}
+A continuación dejamos la documentación consultada de sklearn:
+\begin{itemize}
+    \itemsep0em
+    \item \href{https://scikit-learn.org/stable/modules/grid_search.html}{\textit{Tuning the hyper-parameters of an estimator}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html}{\texttt{RandomizedSearchCV}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html}{\texttt{DecisionTreeClassifier}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html}{\texttt{KNeighborsClassifier}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html}{\texttt{SVC}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.discriminant_analysis.LinearDiscriminantAnalysis.html}{\texttt{LinearDiscriminantAnalysis}}.
+    \item \href{https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.GaussianNB.html}{\texttt{GaussianNB}}.
+\end{itemize}
 
 \end{document}
