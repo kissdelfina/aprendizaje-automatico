@@ -296,6 +296,17 @@ Por otro lado, exploramos qué sucede al restringir el modelo a los atributos co
 
 Finalmente, cabe aclarar que el AUCROC obtenido sobre el conjunto de evaluación \textit{held-out} fue de 0,9189, notablemente superior al 0,8587 de validación cruzada sobre los datos de desarrollo. Esta diferencia llama la atención porque va en la dirección opuesta a la esperada: lo habitual es que el desempeño sobre datos no vistos sea igual o inferior al estimado por validación cruzada, no superior. Una explicación posible es el tamaño reducido del \textit{held-out} (75 instancias), que genera una estimación con alta varianza: con tan pocos datos, el desvío estándar del AUCROC puede ser del orden de 0,05 a 0,10, por lo que un valor de 0,9189 es perfectamente compatible con el 0,8587 de validación cruzada dentro del margen de error. Esto ya se intuía al observar un desvío de 0,0552 entre los folds sobre 425 instancias; con un conjunto cinco veces más chico, esa varianza es considerablemente mayor. En consecuencia, no interpretamos el 0,9189 como evidencia de que el modelo generaliza mejor de lo estimado, sino como una fluctuación estadística esperable dado el tamaño del conjunto de evaluación.
 
+Para analizar cómo depende el desempeño del modelo final de la cantidad de datos disponibles, construimos una curva de aprendizaje. Mezclamos aleatoriamente el conjunto de desarrollo y entrenamos la misma configuración (SVM con kernel polinómico de grado 2, $\gamma=1$ y $C=1000$) sobre proporciones crecientes de él (0,1; 0,2; \ldots; 1,0), midiendo en cada caso el AUCROC sobre las instancias de entrenamiento y sobre el conjunto de evaluación, que se mantuvo fijo. Los resultados se muestran en la Figura \ref{fig:curva_aprendizaje}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{curva_aprendizaje.png}
+\caption{Curva de aprendizaje del SVM polinómico de grado 2: AUCROC sobre entrenamiento y sobre el conjunto de evaluación en función de la proporción del conjunto de desarrollo usada para entrenar.}
+\label{fig:curva_aprendizaje}
+\end{figure}
+
+Dada la acotada cantidad de datos con la que contamos, es esperable que el modelo siga sobreajustando. El AUCROC en entrenamiento se mantiene en 1,0 para todos los tamaños, es decir que incluso con las 425 instancias de desarrollo el modelo sigue separando perfectamente los datos con los que fue entrenado, algo coherente con un valor de $C=1000$ que penaliza fuertemente los errores de clasificación. En cambio, el AUCROC sobre el conjunto de evaluación crece de 0,60 con el 10\% de los datos hasta 0,92 con la totalidad, y no muestra señales de estabilizarse. La brecha entre ambas curvas sigue siendo amplia al final, por lo que todo indica que el modelo se beneficiaría de contar con más instancias. Las oscilaciones de la curva de evaluación, como la caída con el 50\% de los datos, son consistentes con la alta varianza que discutimos para un conjunto de solo 75 instancias.
+
 \section{Conclusiones}
 A lo largo de este trabajo evaluamos cinco algoritmos de clasificación sobre un dataset de expresión génica de 200 variables y 500 instancias, con el objetivo de predecir el pronóstico de lesiones pretumorales. La principal dificultad encontrada fue el desbalance de clases (71,8\% negativas), que hacía que la accuracy no fuera una métrica representativa del desempeño real de los modelos frente a un clasificador trivial que predice siempre la clase mayoritaria, por lo que centramos la selección y comparación de modelos en el AUCROC promedio de validación cruzada.
 
